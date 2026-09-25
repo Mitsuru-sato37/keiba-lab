@@ -50,3 +50,26 @@
 - Do not claim backtest performance when historical odds coverage is
   insufficient; report prediction metrics and odds-coverage limitations
   separately.
+
+## Git and GitHub workflow
+
+- Treat version control as part of implementation, not as an end-of-project
+  cleanup step.
+- Fetch and compare with `origin/main` before starting a phase, before creating
+  a pull request, and after returning to work following an interruption.
+- Implement each phase or coherent vertical slice on a `codex/` branch. Do not
+  accumulate unrelated phases on one branch.
+- Commit after a testable unit passes its relevant checks, before a risky
+  refactor or migration, and at a clean handoff point. Each commit must explain
+  one coherent change and include its tests/specification updates.
+- Push a verified branch at meaningful checkpoints so work is recoverable and
+  reviewable; never push known failing work as if it were complete.
+- Open a pull request when a roadmap phase, independently reviewable vertical
+  slice, or material specification change reaches its acceptance criteria.
+- Before merging a pull request, refresh from `origin/main`, resolve divergence
+  without discarding either side, rerun the relevant full verification, and
+  review the final diff.
+- Never force-push `main`. Do not rewrite shared history unless the user
+  explicitly requests it and the exact impact has been checked.
+- After merge, update local `main`, verify it matches `origin/main`, and create
+  the next work branch from that synchronized state.

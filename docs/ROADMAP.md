@@ -7,6 +7,15 @@ Each phase exits only after its acceptance criteria pass. Later phases may
 refine earlier specifications but cannot relax temporal or reproducibility
 invariants.
 
+## Delivery cadence
+
+Each phase normally uses its own `codex/` branch and pull request. Within a
+phase, commit every coherent, verified unit and push at meaningful recovery or
+review checkpoints. Before phase work and before opening a pull request, fetch
+`origin/main` and reconcile divergence. A phase is not complete until its exit
+criteria pass, its specification and Logic Catalog references are current, and
+the final pull-request diff has been reviewed.
+
 ## Phase 0 - Project skeleton
 
 - Monorepo layout, locked Python/TypeScript environments, quality commands.
