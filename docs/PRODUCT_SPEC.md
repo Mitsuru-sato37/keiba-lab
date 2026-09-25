@@ -1,6 +1,6 @@
 # Product Specification
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 ## Purpose
@@ -87,4 +87,3 @@ Decision -> Stake.
 - Hand-authored complex pace/scenario rules in the initial simulation.
 - Multi-user accounts, cloud tenancy, Kafka, and independently deployed
   microservices.
-

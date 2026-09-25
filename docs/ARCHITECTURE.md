@@ -1,6 +1,6 @@
 # Architecture
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 ## Architectural choice
@@ -113,4 +113,3 @@ Exact dependency versions are selected and locked during skeleton creation.
   single-user scaling need.
 - SQLite as the system database: possible for a demo, but PostgreSQL better
   supports concurrent collector/API/worker activity and temporal querying.
-

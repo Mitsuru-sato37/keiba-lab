@@ -1,6 +1,6 @@
 # Roadmap
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 Each phase exits only after its acceptance criteria pass. Later phases may
@@ -75,4 +75,3 @@ Exit: UI can trace a displayed recommendation to stored calculation evidence.
 
 Golden Race -> one day -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
 2019-2025 final training -> 2026 live validation.
-

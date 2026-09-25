@@ -1,6 +1,6 @@
 # Betting and Money Management Specification
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 ## Bet candidate contract
@@ -69,4 +69,3 @@ or inability to size at the JPY 100 minimum.
 The overall recommendation is a deterministic, versioned selection from the
 three strategy outputs. It may be SKIP even when an individual strategy has a
 BUY if portfolio or reliability controls reject the combined exposure.
-

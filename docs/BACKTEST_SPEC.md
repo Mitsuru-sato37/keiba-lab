@@ -1,6 +1,6 @@
 # Backtest Specification
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 ## Walk-forward schedule
@@ -76,4 +76,3 @@ prediction ID.
 Every run records code revision, configuration checksum, input snapshot
 manifest, training rows/years, feature/model/logic versions, random seeds,
 dependency lock checksum, guard results, and produced artifact IDs.
-

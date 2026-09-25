@@ -1,6 +1,6 @@
 # Data Specification
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 ## Data-source policy
@@ -83,4 +83,3 @@ The Golden Race is the chronologically earliest eligible JRA race in 2022
 available in the normalized BASE-JV dataset, ordered by post time and then
 canonical race ID. A fixture with the same contract is used before live data is
 available.
-

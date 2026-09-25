@@ -1,6 +1,6 @@
 # keiba-lab Foundation Design
 
-Status: Approved conversational design, pending written-spec review  
+Status: Approved conversational design, pending written-spec review
 Date: 2026-09-25
 
 ## Intent
@@ -87,4 +87,3 @@ or claim betting performance.
 - Traceable logic identifiers: `docs/LOGIC_CATALOG.md`
 - Delivery sequence: `docs/ROADMAP.md`
 - Historical conversation: `docs/history/`
-

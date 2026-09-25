@@ -1,6 +1,6 @@
 # Logic Catalog
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 Logic IDs are stable semantic identifiers. Behavior-changing revisions create
@@ -47,4 +47,3 @@ specification -> implementation reference -> validation result.
 Implementation references are added when code exists. They must use stable
 module/symbol names rather than line numbers. Validation results point to test
 IDs and, for experiments, immutable run IDs.
-

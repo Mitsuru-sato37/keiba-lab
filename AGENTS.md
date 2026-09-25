@@ -50,4 +50,3 @@
 - Do not claim backtest performance when historical odds coverage is
   insufficient; report prediction metrics and odds-coverage limitations
   separately.
-

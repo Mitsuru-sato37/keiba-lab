@@ -1,6 +1,6 @@
 # Model Specification
 
-Status: Current Source of Truth  
+Status: Current Source of Truth
 Last updated: 2026-09-25
 
 ## Objectives
@@ -76,4 +76,3 @@ A feature family, model, calibration, blend, or simulation enhancement is
 adopted only when predefined prediction metrics improve stably across future
 walk-forward periods without unacceptable betting-risk degradation. Final
 2025 test results cannot be used to retune the candidate evaluated on 2025.
-

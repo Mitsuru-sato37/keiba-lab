@@ -10,4 +10,3 @@ conflicts with a current document in `docs/`, the current document wins.
   current model, validation, betting, and Logic Explorer decisions.
 - `2026-09-25-implementation-brief.txt`: supplied consolidated implementation
   brief used to create the current Source of Truth.
-
