@@ -1,0 +1,961 @@
+あなたは `keiba-lab` リポジトリの実装担当です。
+
+このプロジェクトは、JRA全レースを対象とした個人用の競馬予想・検証Webアプリです。
+単なる予想画面ではなく、
+
+- JRA-VANからのデータ収集
+- 時点別Snapshot管理
+- 特徴量生成
+- 能力・着順確率予測
+- 仮想レースSimulation
+- 馬券組み合わせ確率
+- Odds / EV評価
+- 安定 / バランス / 穴狙いの3戦略
+- 資金管理
+- Walk-forward Backtest
+- Logic Explorerによる計算過程の追跡
+
+までを一貫して扱います。
+
+これまでChatGPTとの設計議論でかなり仕様を詰めています。
+まずコードを書き始めるのではなく、その設計をリポジトリ内の
+「Source of Truth」として整理してください。
+その後、その仕様を基準として自律的に実装を進めてください。
+
+==================================================
+0. 開発の進め方
+==================================================
+
+ユーザーに細かな判断を逐一求めないでください。
+
+合理的に決定できる技術的事項は自分で判断し、
+設計 → 実装 → テスト → 修正まで継続してください。
+
+停止してユーザー確認を求めるのは主に、
+
+- JRA-VAN契約・認証
+- APIキー・秘密情報
+- 外部サービスへのログイン
+- 課金
+- 重大な仕様変更
+- ユーザーの好みでしか決められないUI/UX
+- 既存の確定仕様と両立できない重大な設計判断
+
+が必要になった場合です。
+
+作業開始時には、
+「今回はどこからどこまで進めるか」を短く示してください。
+
+==================================================
+1. 最初に作成する設計資料
+==================================================
+
+リポジトリに最低限以下を作成してください。
+
+AGENTS.md
+
+docs/
+  PRODUCT_SPEC.md
+  ARCHITECTURE.md
+  DATA_SPEC.md
+  MODEL_SPEC.md
+  BACKTEST_SPEC.md
+  BETTING_SPEC.md
+  LOGIC_CATALOG.md
+  ROADMAP.md
+
+docs/history/
+  （提供された過去の設計会話・資料）
+
+ルール：
+
+- docs/*_SPEC.md 等の現在仕様をSource of Truthとする。
+- docs/history/ は設計判断の経緯を理解するための資料。
+- Historyと現在SPECが矛盾する場合は現在SPECを優先する。
+- Historyに存在する旧案を理由に確定仕様を戻してはいけない。
+- 仕様を変更した場合はコードだけでなく該当SPECも更新する。
+- 実装・Logic ID・検証結果を相互追跡可能にする。
+
+==================================================
+2. プロダクト基本仕様
+==================================================
+
+個人利用のWebアプリ。
+
+対象：
+JRA全レース。
+
+馬券購入そのものは自動化しない。
+最終的な購入はユーザーが手動で行う。
+
+予想更新タイミング：
+
+- 前日
+- 発走30分前
+- 発走10分前
+- 最新Oddsを手入力した場合の即時再計算
+
+能力予測と市場評価は分離する。
+
+「強い馬を予測する処理」と
+「現在のOddsで買う価値があるかを判断する処理」を
+混ぜてはいけない。
+
+表示戦略：
+
+- 安定
+- バランス
+- 穴狙い
+- 総合推奨
+
+BUYだけでなくSKIPを正式な判断結果として扱う。
+
+「予測自体は可能だが買う価値がない」と
+「データ不足等により予測自体の信頼性が低い」
+を区別する。
+
+==================================================
+3. Data Source
+==================================================
+
+Primary Source：
+
+JRA-VAN Data Lab / JV-Link
+
+JRA-VANを基準データとする。
+
+外部サービス（netkeiba等）は初期モデルには依存しない。
+
+将来的に追加する場合は、
+
+Primary
+  JRA-VAN
+
+Enrichment
+  External Source A
+  External Source B
+  Manual Import
+
+という形で完全分離する。
+
+常に
+
+BASE-JV
+
+と
+
+BASE-JV + ENRICH-xxx
+
+を比較できる構造にする。
+
+外部データを追加しても、
+JRA-VAN単独Baselineを再現可能にする。
+
+スクレイピングを前提に設計しない。
+
+==================================================
+4. 時点管理・未来情報リーク防止
+==================================================
+
+このプロジェクトで最重要の制約。
+
+すべての予測は、その予測時点で実際に利用可能だった情報だけを使う。
+
+最低限データに、
+
+source_timestamp
+received_timestamp
+effective_from
+snapshot_id
+
+等の時刻情報を持たせる。
+
+Feature生成APIは概念的に、
+
+race_id
+horse_id
+as_of_time
+feature_version
+
+を受け取り、
+as_of_timeより未来の情報を取得できない構造にする。
+
+データ層は概ね、
+
+raw
+↓
+normalized
+↓
+features
+
+に分離する。
+
+履歴更新は原則上書きせず、
+イベント・Snapshotとして保存する。
+
+==================================================
+5. Walk-forward Backtest
+==================================================
+
+これは確定仕様。
+
+最初のテスト年は必ず2022年。
+
+1:
+Train 2019–2021
+Test 2022
+
+2:
+Train 2019–2022
+Test 2023
+
+3:
+Train 2019–2023
+Test 2024
+
+4:
+Train 2019–2024
+Test 2025
+
+最終運用モデル：
+Train 2019–2025
+
+2026年以降：
+Live / ongoing validation
+
+各年について必ず、
+
+1. その年の結果をモデルが見ていない状態で予測
+2. Prediction / Recommendationを保存
+3. 実際の結果・払戻と照合
+4. その年の性能を確定
+5. その後にのみ、その年を次年度モデルの学習へ追加
+
+という順序にする。
+
+2022を最初から学習データに含めてはいけない。
+
+==================================================
+6. Golden Race Test
+==================================================
+
+最初から全期間Backtestを作らない。
+
+まず1レースだけEnd-to-Endで通す。
+
+MVP-0：
+
+2019–2021だけで学習
+↓
+2022年の最初の対象レースを予測
+
+処理：
+
+Data Snapshot
+↓
+Feature Snapshot
+↓
+Prediction
+↓
+Calibration
+↓
+Simulation
+↓
+Bet Probability
+↓
+Odds Snapshot
+↓
+EV
+↓
+Strategy
+↓
+Money Allocation
+↓
+Recommendation
+----------------
+ここまで結果非公開
+----------------
+Actual Result
+↓
+Evaluation
+
+Recommendation保存前に
+Actual Resultを参照してはいけない。
+
+これが通ってから、
+
+1 race
+↓
+1 day
+↓
+all 2022
+↓
+2023
+↓
+2024
+↓
+2025
+
+へ拡張する。
+
+==================================================
+7. Leak Guard
+==================================================
+
+最低限以下の自動検査を実装する。
+
+LEAK-001
+発走後情報がFeatureに存在
+→ FAIL
+
+LEAK-002
+2022テストモデルのTraining Setに2022データが存在
+→ FAIL
+
+LEAK-003
+能力予測モデルに当該レースOddsが入力
+→ FAIL
+
+LEAK-004
+Recommendation確定前にResult / payoutへアクセス
+→ FAIL
+
+VERSION-001
+Feature / Model / Logic Version欠落
+→ FAIL
+
+1つでもFAILしたBacktest Runは
+正式な成績として扱わない。
+
+==================================================
+8. Feature Engine
+==================================================
+
+初期版は複雑な競馬理論を大量に手作業で入れない。
+
+Core Feature v1は概ね50–100特徴量程度から開始。
+
+候補：
+
+- race/course
+- turf/dirt
+- distance
+- direction
+- class
+- field size
+- gate / horse number
+- sex / age
+- carried weight
+- jockey / trainer
+- recent 1 / 3 / 5 races
+- finish position
+- margin
+- finish time
+- final 3F
+- passing positions
+- normalized previous performance
+- days since last race
+- distance change
+- surface change
+- course change
+- class change
+- carried weight change
+- similar condition history
+- same surface performance
+- similar distance performance
+- same course performance
+- recent form trend
+- final3f relative
+- pace position relative
+
+過去Odds / popularityは保存するが、
+Core Ability Modelには最初は投入しない。
+後の比較候補とする。
+
+追加候補：
+
+- pedigree
+- sale price
+- training
+- jockey/trainer aggregates
+- pace/running style
+
+追加Featureは一つずつAblation Testし、
+将来期間で安定して改善したものだけ採用する。
+
+==================================================
+9. Prediction Model
+==================================================
+
+最低3系統を比較可能にする。
+
+A. Baseline
+単純な基準モデル。
+
+B. Probability Model
+CatBoostを第一候補。
+LightGBM等との比較可能性を残す。
+
+予測：
+
+win probability
+top2 probability
+top3 probability
+
+レース内整合性：
+
+sum(win probabilities) = 1
+
+各馬：
+
+win <= top2 <= top3
+
+必要に応じてCalibrationを行う。
+
+C. Ranking Model
+レース単位groupによるRanking。
+
+CatBoost Ranking
+QuerySoftMax / YetiRank等を候補。
+
+Probability Modelとの比較・不確実性判断に使う。
+
+最初から複雑なEnsembleにしない。
+
+BlendはWalk-forwardで改善が確認できた場合のみ採用。
+
+ニューラルネットは初期版では使わない。
+
+巨大な三連単専用モデルも初期版では作らない。
+
+==================================================
+10. Day-of Update Layer
+==================================================
+
+当日情報はAbility Modelとは分離されたUpdate Layerとして扱う。
+
+候補：
+
+- weather
+- track condition
+- scratches
+- jockey changes
+- body weight / change
+- その他当日公開情報
+
+OddsはAbility Modelには入力しない。
+
+OddsはPrediction後のMarket Evaluationにのみ使う。
+
+==================================================
+11. Simulation
+==================================================
+
+HorsePredictionを使って仮想レースを生成し、
+
+- win
+- quinella
+- exacta
+- wide
+- trio
+- trifecta
+
+等の組み合わせ確率を推定する。
+
+Simulation回数は固定100,000回にしない。
+
+初期値を設定し、
+推定値の収束・精度・処理時間を見ながら
+必要に応じて追加Simulationする設計にする。
+
+人間が定義した複雑な展開・脚質ルールは初期版では入れない。
+
+将来、Walk-forwardで改善した場合のみ採用候補とする。
+
+==================================================
+12. Odds / EV
+==================================================
+
+各Bet Candidateについて最低限、
+
+bet_type
+combination
+model_probability
+current_odds
+predicted_final_odds
+conservative_probability
+conservative_odds
+expected_value
+uncertainty
+logic_version
+
+を扱えるようにする。
+
+安全側の確率・Oddsを使って判断する。
+
+安全側EVが採用基準未満ならSKIP。
+
+最新Odds手入力時は即再計算可能にする。
+
+==================================================
+13. Betting Strategy
+==================================================
+
+3戦略。
+
+安定：
+- 単勝・複勝・ワイド・馬連中心
+- 的中確率と安定性優先
+- 少ない買い目
+- 不確実性が高ければSKIP
+- 初期1レース上限：資金の2%
+
+バランス：
+- 全券種候補
+- 的中率 / EV / payout / 点数を総合
+- 初期1レース上限：3%
+
+穴狙い：
+- 高配当でも正EVのみ
+- 三連複・三連単等も候補
+- 少額
+- 初期1レース上限：1.5%
+
+これらの%は最終最適値ではない。
+安全側の初期値。
+
+2022–2024で検証・調整し、
+2025 Test前に固定する。
+
+==================================================
+14. Money Management
+==================================================
+
+基本：
+
+1/4 Kelly
+
+その後、
+
+- strategy cap
+- race cap
+- 100円単位
+- correlation / overlap control
+- model disagreement adjustment
+- unsettled exposure limit
+
+を適用する。
+
+最低購入額100円で適切なSizingができない場合はSKIP。
+
+結果未確定馬券の総Exposureは、
+初期値として利用可能資金の10%まで。
+
+Daily Budgetは
+「その日の総購入額」ではなく
+「許容する確定損失」として扱う。
+
+払戻は後続レースに再利用可能。
+
+未確定馬券は別管理。
+
+確定損失がDaily Budgetへ到達したら停止。
+
+負けを取り戻すための追い賭けは禁止。
+
+上限を増やす場合はユーザーが明示的に変更する。
+
+==================================================
+15. SKIP Conditions
+==================================================
+
+例：
+
+- conservative EV below threshold
+- Probability ModelとRanking Modelの乖離大
+- 必要な当日情報不足
+- scratch / jockey change後の再計算未完了
+- Odds変動が大きすぎる
+- 高EVが不安定な単一Featureに依存
+- capital limit到達
+- 100円Minimumでは適切なSizing不能
+
+SKIP Reasonを構造化して保存する。
+
+==================================================
+16. Evaluation
+==================================================
+
+Prediction QualityとBetting Qualityを分離評価する。
+
+Prediction：
+
+- Log Loss
+- Brier Score
+- Calibration
+- ranking quality
+- その他必要な確率評価
+
+Betting：
+
+- hit rate
+- ROI
+- max drawdown / loss
+- max losing streak
+- number of bets
+- bet type performance
+- strategy performance
+- month stability
+- course
+- distance
+- track condition
+
+同じPrediction Snapshotに対して、
+
+- 1/8 Kelly
+- 1/4 Kelly
+- fixed stake
+- strategy variants
+- SKIP threshold variants
+
+等を再評価可能にする。
+
+Predictionを再学習しなくても
+Betting Logicを比較できる構造にする。
+
+==================================================
+17. Logic Explorer
+==================================================
+
+必須機能。
+
+単なるAI生成説明ではない。
+
+実際に計算・保存した中間値を表示する。
+
+各工程をクリックすると最低限、
+
+Input
+Logic / judgment conditions
+Output
+Next Stage
+Logic Version
+Model Version
+Feature Version
+Calculation Timestamp
+
+を確認できる。
+
+Logic ID例：
+
+FEAT-023
+MODEL-WIN-001
+MODEL-RANK-001
+SIM-001
+EV-004
+BET-012
+MONEY-003
+LEAK-001
+
+目標：
+
+UI
+↓
+Logic ID
+↓
+Specification
+↓
+Implementation Code
+↓
+Validation Result
+
+を追跡可能にする。
+
+==================================================
+18. UI
+==================================================
+
+初期構成：
+
+1. Today
+2. Race
+3. Logic Explorer
+4. Backtest
+5. Performance
+6. Settings
+
+通常利用：
+
+Today
+↓
+Race
+
+Race上部：
+
+- BUY / SKIP
+- confidence
+- data status
+- last calculation time
+- 安定
+- バランス
+- 穴狙い
+- overall recommendation
+
+その下で、
+
+Horse Evaluation
+↓
+Finish Probabilities
+↓
+Bet Probabilities
+↓
+Odds
+↓
+EV
+↓
+Purchase Decision
+↓
+Stake
+
+を掘り下げられるようにする。
+
+UI/UXを本格実装する前に、
+まずモックを作成して確認可能な状態にする。
+
+==================================================
+19. Architecture
+==================================================
+
+概念的には、
+
+JRA-VAN
+↓
+Collector
+↓
+Snapshot Manager
+↓
+Feature Engine
+↓
+Prediction Engine
+↓
+Simulation Engine
+↓
+Odds / EV Engine
+↓
+Betting Engine
+↓
+Explanation Engine
+↓
+Web UI
+
+Explanation Engineは
+実データ・Reason Code・Logic IDを表示する。
+
+LLMに後付けで理由を創作させない。
+
+==================================================
+20. 初期Technology候補
+==================================================
+
+現時点の候補：
+
+- Windows 11
+- Python
+- JRA-VAN JV-Link 64bit
+- PostgreSQL
+- CatBoost
+- FastAPI
+- React
+- TypeScript
+- Python Backtest Worker
+- Git / GitHub
+
+ただし技術的により適切な選択があり、
+確定仕様を壊さず明確な利点がある場合は変更可能。
+
+変更理由をARCHITECTURE.mdへ記録する。
+
+==================================================
+21. Database
+==================================================
+
+少なくとも以下の概念を設計する。
+
+raw_*
+race
+runner
+horse_history
+training
+race_event
+odds_snapshot
+feature_snapshot
+prediction_snapshot
+simulation_result
+bet_candidate
+recommendation
+result
+model_version
+feature_version
+logic_version
+backtest_run
+
+必要に応じて正規化・追加する。
+
+重要なのは、
+過去のPredictionを現在のモデルで上書きしないこと。
+
+その時点の
+
+Data
+Feature
+Model
+Logic
+Recommendation
+
+を再現できること。
+
+==================================================
+22. Model Contract
+==================================================
+
+概念：
+
+RaceSnapshot
+{
+  race,
+  runners[] {
+    horse,
+    features
+  }
+}
+
+↓
+
+HorsePrediction
+{
+  horse_id,
+  win_probability,
+  top2_probability,
+  top3_probability,
+  ranking_score,
+  uncertainty,
+  model_version,
+  feature_version
+}
+
+↓
+
+BetCandidate
+↓
+
+Recommendation
+
+Recommendationには最低限、
+
+strategy
+bet
+amount
+EV
+confidence
+risk
+decision BUY | SKIP
+reason_codes[]
+
+を持たせる。
+
+==================================================
+23. 最初の実装順
+==================================================
+
+まずリポジトリ状態を確認する。
+
+次に設計資料を作成・整合性確認。
+
+その後：
+
+Phase 0
+Project skeleton
+
+Phase 1
+DB schema / migrations
+
+Phase 2
+JRA-VAN Adapter interface
+（実認証なしで作れるところまで）
+
+Phase 3
+Snapshot / Feature Engine
+
+Phase 4
+Baseline / Prediction interfaces
+
+Phase 5
+Backtest Engine + Leak Guard
+
+Phase 6
+Dummy Data Golden Race Test
+
+Phase 7
+Logic Explorer Mock
+
+ここまでは可能な限り自律的に進める。
+
+JRA-VAN実データ接続に
+ユーザーの契約・認証・ローカル操作が必要になった時点で停止し、
+必要な操作だけを具体的に依頼する。
+
+==================================================
+24. 完成条件
+==================================================
+
+最終的には、
+
+2022
+2023
+2024
+2025
+
+を完全Walk-forwardで評価できる。
+
+未来情報リークがない。
+
+任意のRecommendationについて、
+
+元データ
+↓
+Feature
+↓
+Prediction
+↓
+Simulation
+↓
+EV
+↓
+Bet Decision
+↓
+Money Allocation
+
+まで再現可能。
+
+Logic Explorerからその経路を確認可能。
+
+これを完成条件とする。
+
+==================================================
+25. 今回まず実行すること
+==================================================
+
+1. 現在の `keiba-lab` リポジトリを調査する。
+2. Git status / branch /既存ファイルを確認する。
+3. 提供されたDesign Historyを `docs/history/` に整理する。
+4. 上記仕様からAGENTS.mdとdocs一式を作る。
+5. 仕様間の矛盾・未決事項を洗い出す。
+6. 軽微な未決事項は合理的に自分で決める。
+7. 重大な問題がなければProject Skeletonの実装へ進む。
+8. テスト可能な単位ごとに検証する。
+9. JRA-VAN認証が必要になるまでは、原則としてユーザーの逐次承認を待たず進める。
+
+重要：
+最初のTest Yearは2022。
+2019–2021で学習して2022を予測する。
+この順序を変更しないこと。

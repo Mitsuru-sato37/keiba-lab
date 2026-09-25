@@ -1,0 +1,627 @@
+# 競馬予想ツールの設計を詰める
+
+> 競馬予想ツールの件をなるべく詰めてからCodexで作業したいなと思ったので、こちらで続きからやれればと思う。
+
+<details><summary>5 previous messages</summary>
+
+> 続きから詰められるよう、まず既存の検討内容を探して要点を引き継ぎます。今回は「using-superpowers」で進め方を整え、設計に入る前に「brainstorming」で要件を絞ります。あわせて、過去に同じ競馬予想ツール案や決定事項がないか「想起」で確認します。
+>
+> <details><summary>Explored a file, ran a command</summary>
+>
+> - Ran `Get-Content -Raw 'C:\Users\msato\.codex\plugins\cache\openai-curated-remote\superpowers\6.4.1\skills\using-superpowers\SKILL.md'; Get-Content -Raw 'C:\Users\msato\.codex\plugins\cache\openai-curated-remote\superpowers\6.4.1\skills\brainstorming\SKILL.md'`
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/using-superpowers/references/codex-tools.md`
+>
+> </details>
+>
+> </details>
+>
+> これは新規ツール全体の設計に関わるため、現時点では「architectural（設計から固める案件）」として扱います。まず過去のタスクと、この作業場所に残っている資料を確認し、その後は未決事項だけを一問ずつ詰めます。実装は設計合意後です。
+>
+> <details><summary>Ran a command</summary>
+>
+> Tool call
+>
+> Tool: list_threads
+> Status: completed
+>
+> - Ran `rg --files -g '!work/**' -g '!outputs/**'; git log -5 --oneline --decorate 2>$null; git status --short 2>$null`
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> Tool call
+>
+> Tool: read_thread
+> Status: completed
+>
+> </details>
+>
+> 過去の音声タスクを確認できました。直前は「データと更新タイミング」の設計まで進んでおり、次は能力予測モデルの組み方を決める段階です。今回の作業場所にはまだ実装物や設計書はなく、会話上の合意を引き継ぐところからになります。
+</details>
+
+前回の内容を引き継げました。やり直さず、直前で止まっていた「能力予測モデルの選定」から続けます。
+
+現時点の共通認識は次のとおりです。
+
+- JRAの全レースを分析する個人用Webアプリ
+- 馬券購入は手動
+- 能力予測とオッズ評価を分離
+- 前日・30分前・10分前に予想を更新
+- 最新オッズの手入力でも再計算可能
+- 安定・バランス・穴狙いの3案と総合推奨を表示
+- JRA-VAN Data Labを第一候補にする
+- 予想時点で存在したデータだけを使って検証する
+- 新しいモデルは、複数期間で安定して改善した場合だけ採用する
+
+能力予測モデルには主に3案あります。
+
+1. 段階型モデル（おすすめ）
+   CatBoostなどで各馬の能力・適性を評価し、その評価を使って展開を多数回シミュレーション。1着・2着・3着確率を求めます。比較的説明しやすく、欠損データにも強く、初期版から現実的な精度を狙えます。
+
+2. 着順直接予測モデル
+   過去レースから着順や馬同士の優劣を直接学習します。構成は比較的単純ですが、展開や「なぜその順位になるのか」を表現しにくくなります。
+
+3. ニューラルネット中心
+   血統や長い戦績まで複雑に学習できますが、大量のデータと調整が必要です。最初から採用すると、改善理由が分かりにくく、過学習の発見も難しくなります。
+
+おすすめは1です。初期版では、
+
+> 基礎能力・条件適性を数値化
+> → レース展開を複数パターンでシミュレーション
+> → 1〜3着確率を算出
+> → 予測最終オッズと比較
+> → 券種・買い目・金額・見送りを決定
+
+という流れにします。2を比較用の基準モデルとして併走させ、将来的に十分なデータが集まったら3を候補に加える構成です。
+
+この「段階型モデルを本命、着順直接予測を比較基準にする」方針で進めてよいですか？
+
+> まずはそれでやってみるか。
+> なるべく時間をかけずに完成するために過去の情報をすべて拾うのではなく、例えば2025年までの情報で20205年のレースで答え合わせなどをすることでなるべく試行回数を稼げるかなと思うけどどう？
+
+<details><summary>2 previous messages</summary>
+
+> その考え方はかなり良いです。今回は設計の続きなので、引き続き「brainstorming」で、短期間でも検証結果を信用できる切り分け方に落とします。特に「2025年の結果を学習側に混ぜない」ことが肝なので、時系列検証の公式資料も確認します。
+>
+> <details><summary>Searched the web</summary>
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/brainstorming/SKILL.md`
+>
+> </details>
+>
+> Searched the web for `site:scikit-learn.org stable TimeSeriesSplit time-ordered data future past ...`
+>
+> Searched the web for `site:scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html`
+>
+> </details>
+</details>
+
+その考え方で合っています。おそらく「2024年までの情報を使って、2025年のレースで答え合わせ」という意味だと思いますが、それが効率と信頼性のバランスが良い進め方です。
+
+おすすめの初期構成は次です。
+
+| 期間 | 役割 |
+|---|---|
+| 2020〜2023年 | モデルの学習 |
+| 2024年 | モデル・設定・見送り基準の調整 |
+| 2025年 | 最後まで触らない本番相当テスト |
+| 2026年 | 完成後の追加検証・試験運用 |
+
+2025年の検証では、レースを時系列順に再現します。
+
+1. その時点までに判明していた情報だけで予想
+2. 前日・30分前・10分前の予想を記録
+3. 安定・バランス・穴狙いの3案を記録
+4. 実際の着順・払戻しと照合
+5. 次の開催日へ進む
+
+この方式はウォークフォワード検証と呼ばれ、未来のデータで過去を予測してしまう問題を防げます。通常のランダム分割ではなく、常に過去で学習して未来を評価するのが基本です。[scikit-learnの時系列分割](https://scikit-learn.org/1.6/modules/generated/sklearn.model_selection.TimeSeriesSplit.html)
+
+大事な注意点は、2025年の成績を見ながらモデルや買い目基準を何度も直すと、2025年も実質的に学習データになってしまうことです。そのため、
+
+- 2024年：何度試してもよい調整用
+- 2025年：最後に一度だけ評価するテスト用
+
+と分けます。
+
+また、評価は回収率だけにしません。大穴が一度当たるだけで数字がよく見えるため、以下を同時に確認します。
+
+- 1〜3着確率の正確さ
+- 確率の信頼性（「30%」と出した馬が本当に約30%来るか）
+- 券種別・戦略別の的中率と回収率
+- 最大連敗数と最大損失
+- 見送りを含めた購入回数
+- 競馬場・距離・馬場別の安定性
+
+確率評価にはLog loss、Brier score、確率校正グラフなどを使います。的中率が同じでも、確率の質が違うモデルを区別できます。[scikit-learnの確率校正ガイド](https://scikit-learn.org/1.5/modules/calibration.html)
+
+最初から全過去年を集めるより、まず2020〜2025年で一巡させ、古いデータの追加で本当に改善する場合だけ2019年以前を取り込む方が早く完成します。古い制度や競馬環境の影響も抑えられます。
+
+この「2020〜2023年学習・2024年調整・2025年最終テスト」を初期方針として固定してよいですか？
+
+> 2025年も最終的には学習データになっていいんじゃないの？
+> 今以降の学習回数が省けるという感じだよね。
+> 学習回数のためなら、もっと前をテスト年にしてもいいけど。
+>
+> それはどう思う？
+
+<details><summary>2 previous messages</summary>
+
+> はい、最終版では2025年も学習に入れて構いません。設計の続きとして「brainstorming」で、評価用に一時的に隔離する期間と、完成後に学習へ戻すタイミングを整理します。
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/brainstorming/SKILL.md`
+>
+> </details>
+</details>
+
+はい、その理解で合っています。2025年は「評価が終わるまではテスト用として隔離し、評価確定後は最終モデルの学習データへ戻す」のがよいです。
+
+つまり、テストデータは永久に捨てるものではありません。
+
+おすすめは段階的なウォークフォワード方式です。
+
+| 検証 | 学習に使う期間 | 答え合わせ |
+|---|---|---|
+| 1回目 | 2019〜2021年 | 2022年 |
+| 2回目 | 2019〜2022年 | 2023年 |
+| 3回目 | 2019〜2023年 | 2024年 |
+| 最終確認 | 2019〜2024年 | 2025年 |
+| 完成モデル | 2019〜2025年すべて | 2026年以降で運用 |
+
+こうすれば2022〜2025年の各レースで大量に答え合わせできます。さらに、2022年は最初の検証後、次のモデルでは学習データになります。同じように、2023年、2024年、2025年も順番に学習へ取り込めます。
+
+大事なのは順序です。
+
+1. その年の結果を知らない状態で予想する
+2. 予想と実際の結果・払戻しを保存する
+3. その年の成績を確定する
+4. その後で、次の年を予想するための学習データへ加える
+
+この順序なら、未来の情報が混ざりません。
+
+2025年についても、
+
+> 2019〜2024年で予想
+> → 2025年全レースの成績を確定
+> → モデルや基準を評価
+> → 最後に2025年を学習へ追加
+
+と進めれば問題ありません。
+
+これによって省けるのは、運用開始後に十分なデータが貯まるまで待つ時間です。完成時点ですでに複数年・多数レースの学習経験を持ったモデルにできます。ただし、2026年以降の結果を追加する定期学習自体は必要です。競馬環境や騎手、馬、傾向が変化するためです。
+
+なお、2025年の結果を見て設定を直した後に、同じ2025年の成績を「最終テスト結果」と呼ぶことはできません。その場合は2025年が調整データになり、2026年の未使用期間が次の純粋なテストになります。この区別だけ、記録上は厳密に残します。
+
+したがって初期方針は、**2019〜2025年を取得し、2022〜2025年を順次答え合わせに使った後、最終的には全期間を学習へ投入する**のがおすすめです。この期間設定で固定してよいですか？
+
+> いいんじゃないかな。文句はない。
+
+<details><summary>2 previous messages</summary>
+
+> 了解です。検証期間と再学習の考え方はこれで確定します。引き続き「brainstorming」で、次は段階型モデルが何を学習し、どう着順確率へ変換するかを設計します。
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/brainstorming/SKILL.md`
+>
+> </details>
+</details>
+
+では、この方針を確定します。
+
+次の設計セクションは「能力予測から着順確率まで」です。
+
+1. 馬の基礎能力
+   直近成績、着差、走破時計、上がり、相手レベル、休養期間などから、現在の能力値を算出します。
+
+2. 今回の条件への適性
+   競馬場、距離、芝・ダート、馬場状態、枠順、斤量、血統などで能力値を補正します。
+
+3. 人・当日状態の補正
+   騎手、調教師、乗り替わり、馬体重と増減、調教情報などを反映します。取得できない項目があっても予測可能にします。
+
+4. 展開のシミュレーション
+   逃げ・先行・差し・追込の構成から、スロー・平均・ハイペースなど複数の展開を作ります。各展開で着順を何度も試算し、展開が変わった場合の不確実性も含めます。
+
+5. 確率への変換
+   各馬について、1着・2着・3着以内の確率と、三連単などに必要な着順組み合わせの確率を出します。「30%と予想した馬が長期的に約30%来るか」も補正・検証します。
+
+この段階ではオッズを使いません。最初に純粋な能力・適性・展開から確率を作り、その後でオッズと比較して、
+
+- 人気だが割高な馬
+- 市場より過小評価されている馬
+- オッズが下がると買う価値がなくなる組み合わせ
+- 確信度が低く見送るべきレース
+
+を判断します。
+
+また、表示する予想根拠は「総合点」の一言ではなく、
+
+- 距離適性：プラス
+- 重馬場適性：大きくプラス
+- 枠順：ややマイナス
+- 予想ペース：差し有利
+- 馬体重：通常範囲
+- 不確実性：高め
+
+のように、人が確認できる形で残します。
+
+初期版では複雑にしすぎず、この5段階を基本構造にする方針で問題ないですか？
+
+> もう一回精査してここは確定したい。
+> こちらが口出すのは厳しいから、いろいろなサイトなどを把握してもう一度考えてみてほしい。
+
+<details><summary>4 previous messages</summary>
+
+> ここは設計の核なので、いったん確定扱いを外して再精査します。「brainstorming」に沿い、JRA/JRA-VANの取得可能データ、競馬予測の研究、確率校正・時系列検証、買い目確率の作り方を一次資料中心に照合してから、採用案・不採用案・理由までまとめます。今回は結論をこちらで絞り込みます。
+>
+> <details><summary>Searched the web</summary>
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/brainstorming/SKILL.md`
+>
+> </details>
+>
+> Searched the web for `site:jra-van.jp/dlb JRA-VAN Data Lab データ仕様 蓄積系 速報系 血統 調教 オッズ 馬体重 ...`
+>
+> Searched the web for `site:pmc.ncbi.nlm.nih.gov horse racing prediction machine learning features odds jockey trainer ...`
+>
+> Searched the web for `site:jra-van.jp/dlb/sdv/sdk JVData 仕様 調教 競走馬 セリ 市場取引価格 PDF ...`
+>
+> </details>
+>
+> ここまでで重要な見直し点が出ています。直近のJRAデータを使った研究では、専門家が作った複雑なルール特徴を増やしたモデルより、基本情報と過去成績だけの簡潔なモデルの方が将来期間で良い結果でした。したがって、先ほどの「展開シミュレーションを最初から中核にする」案は、そのまま確定せず、比較対象へ下げる方向で精査しています。
+>
+> <details><summary>Searched the web</summary>
+>
+> Searched the web for `site:jra-van.jp/dlb/sdv/sdk/JV-Data4901.pdf 坂路調教情報 提供期間 1年間 過去データ ...`
+>
+> Searched the web for `site:catboost.ai/docs ranking loss functions CatBoostRanker QuerySoftMax YetiRankPairwise ...`
+>
+> </details>
+</details>
+
+精査した結果、先ほどの5段階案は少し修正した方がよいです。特に、最初から人間が考えた展開ルールを中核にするのは避けます。
+
+直近のJRA-VANデータを使った研究では、騎手・種牡馬集計や競馬理論ベースの特徴を大量に加えた110特徴モデルより、出走情報と過去成績を中心とした25特徴モデルの方が、2025～2026年の独立テストで勝率・複勝率予測とも良好でした。複雑な専門ルールは、未来期間でノイズになる可能性があります。[JRA競走を使った2026年の研究](https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2026.1896192/full)
+
+## 確定候補の予測構造
+
+### 1. データを予想時点ごとに固定する
+
+同じレースについて、以下を別のスナップショットとして保存します。
+
+- 前日
+- 発走30分前
+- 発走10分前
+- 任意の手入力更新
+- 結果確定後
+
+各項目に「いつ入手できたか」を記録し、その時点で存在しなかった情報は絶対に使いません。
+
+JRA-VANでは出馬表、過去成績、血統、調教、市場取引価格、馬体重、天候・馬場、リアルタイムオッズ、時系列オッズなどを取得できます。ただし、馬体重はおおむね発走60分前、時系列オッズは5～10分間隔など、項目ごとに提供時点が異なります。[JRA-VANデータ仕様](https://jra-van.jp/dlb/ddata.html)
+
+### 2. 最初は簡潔な特徴から学習する
+
+初期モデルへ確実に入れるのは次です。
+
+- 競馬場、芝・ダート、距離、レース条件、頭数
+- 枠番、馬番、性別、年齢、斤量
+- 直近1・3・5走の着順、着差、走破時計、上がり、通過順位
+- 過去成績を今回の頭数やレース水準に合わせて補正した値
+- 休養日数
+- 距離、馬場、競馬場、クラスの変更
+- 今回と似た条件での過去成績
+- 前走までに確定していた騎手・調教師・血統情報
+
+「直近成績、平均順位、斤量、年齢」がランキング予測で重要だったという別の競馬研究とも整合します。[2025年のLearning-to-Rank研究](https://www.kci.go.kr/kciportal/ci/sereArticleSearch/ciSereArtiView.kci?sereArticleSearchBean.artiId=ART003266151)
+
+一方、以下は最初から強く信用せず、追加した場合と外した場合を比較します。
+
+- 複雑な騎手・調教師指数
+- 血統から人間が作った適性ルール
+- セリ価格
+- 調教指数
+- 脚質・展開の手作りスコア
+- 「この条件ならこのタイプが有利」といった固定ルール
+
+血統情報そのものは候補に残しますが、最初から複雑な血統理論へ変換しません。セリ価格も取得して保存しますが、欠損が多い可能性があるため、追加効果を確認してから採用します。
+
+### 3. 2種類のモデルを併走させる
+
+一つのモデルだけで全部を決めません。
+
+**確率モデル**
+
+- 各馬の1着確率
+- 2着以内確率
+- 3着以内確率
+
+を予測します。CatBoost系を第一候補にし、LightGBMも比較します。確率はレース内で整合するよう補正し、「1着確率の合計が100%」「1着確率≦2着以内≦3着以内」を守らせます。
+
+**ランキングモデル**
+
+同じレースの馬をひとまとまりとして、相対的な順位を学習します。CatBoostにはレース単位のグループを扱えるQuerySoftMaxやYetiRankなどがあります。[CatBoostのランキング仕様](https://catboost.ai/docs/en/concepts/loss-functions-ranking)
+
+確率モデルとランキングモデルが大きく食い違うレースは、不確実性が高いと判定します。最終的に両者を混ぜるのは、過去検証で単体モデルより改善した場合だけです。
+
+### 4. 当日情報は別段階で補正する
+
+前日モデルは、馬場・馬体重・オッズを使わずに基礎能力を出します。
+
+30分前以降は、
+
+- 天候・馬場状態
+- 取消・騎手変更
+- 馬体重と増減
+- 当日発表済み情報
+
+を加えた当日モデルで更新します。
+
+オッズはここでも能力モデルへ直接混ぜません。市場人気をなぞるモデルになるのを避けるためです。能力予測が終わった後の「市場との比較」にだけ使います。
+
+### 5. 着順組み合わせは確率モデルから生成する
+
+三連単などは、単純に各馬の1着確率を掛け合わせるだけでは正確になりません。また、1着確率だけから三連単確率を作る古典的なHarville型にも限界があり、独立正規走破時間モデルの方が良かったという比較があります。さらに、三連単・馬単市場そのものの投票情報は、単勝市場だけから推定するより有用だったと報告されています。[香港大学の複雑馬券確率研究](https://hub.hku.hk/handle/10722/60987)
+
+初期版では、各馬に「予測能力値＋当日の不確実性」を持たせ、仮想レースを多数回実行します。そこから、
+
+- 1着・2着・3着
+- 馬連・ワイド
+- 馬単
+- 三連複
+- 三連単
+
+の各組み合わせ確率を数えます。
+
+ただし、展開を人間の固定ルールで決めるのではなく、最初は過去データから推定した能力のばらつきを使います。脚質とペースを加えた展開シミュレーションは「追加候補」とし、それを入れて未来期間の成績が改善した場合だけ採用します。
+
+### 6. 最後にオッズと比較する
+
+各買い目について、
+
+> モデルが予測した的中確率 × 予測払戻し
+
+を計算し、オッズ低下を見込んだ安全幅を差し引きます。
+
+- 期待値が基準未満なら見送り
+- 10分前オッズから下落しても利益余地があるものだけ残す
+- 手入力で最新オッズを入れた場合は即時再計算
+- 買い目・金額・見送り判定の変更理由を保存
+
+とします。
+
+注意点として、JRA-VANの通常データは1年以上前についてセットアップデータから取得できますが、時系列オッズなどは提供期間や券種に制約があります。[JRA-VANの過去データ取得FAQ](https://jra-van.jp/dlb/sdv/faq.html)
+そのため、2019～2025年で「能力予測」は検証できても、発走10分前のオッズを完全に再現できないレースについては、実運用相当の回収率を断定しません。取得できた時点別オッズだけで回収率を検証し、今後は全スナップショットを自前保存します。
+
+## 採用・保留・初期不採用
+
+| 項目 | 判断 |
+|---|---|
+| CatBoost系の勝率・複勝率モデル | 採用 |
+| レース単位のランキングモデル | 比較用として採用 |
+| 能力予測とオッズ評価の分離 | 採用 |
+| 時点別スナップショット | 必須 |
+| 確率校正とレース内整合性補正 | 必須 |
+| 仮想レースによる組み合わせ確率 | 採用 |
+| 血統・セリ価格・調教データ | 比較追加候補 |
+| 固定ルール中心の展開予測 | 初期版では不採用 |
+| ペース・脚質シミュレーション | 改善を確認できた場合のみ追加 |
+| ニューラルネット | 初期版では不採用 |
+| 三連単専用の巨大モデル | データが十分になるまで保留 |
+
+結論として、初期版は「複雑な競馬理論を詰め込むモデル」ではなく、**簡潔な確率モデル＋ランキングモデル＋検証可能な仮想レース＋独立したオッズ評価**にします。追加要素は一つずつ投入し、2022～2025年の時系列検証で改善したものだけ残す構成が、完成速度と信頼性の両方で最も堅実です。
+
+この修正版を、能力予測・着順確率部分の確定設計として進めてよいですか？
+
+> いいでしょう。
+
+<details><summary>2 previous messages</summary>
+
+> 了解です。能力予測・着順確率の構造は、この修正版で確定します。次は、その確率から「安定・バランス・穴狙い」の買い目、見送り、金額をどう決めるかです。ここも金銭判断に直結するため、「brainstorming」で資金配分と損失制限までセットで設計します。
+>
+> <details><summary>Searched the web</summary>
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/brainstorming/SKILL.md`
+>
+> </details>
+>
+> Searched the web for `site:jra.go.jp 払戻率 単勝 複勝 馬連 ワイド 三連単 JRA ...`
+>
+> </details>
+</details>
+
+次は「買い目・見送り・金額」の設計です。ここは次の形をおすすめします。
+
+## 買い目の選定
+
+モデルが生成した全組み合わせから、まず以下を計算します。
+
+- 的中確率
+- 現在オッズでの期待値
+- 予測最終オッズでの期待値
+- オッズが不利に動いた場合の下限期待値
+- モデル間の予測差
+- 同じレース内の他の買い目との重複度
+
+期待値は一点予測ではなく、安全側の確率とオッズで判定します。
+
+> 安全側的中確率 × 安全側予測オッズ ＞ 採用基準
+
+を満たさない買い目は除外します。
+
+JRAの設定払戻率は単勝・複勝80%、馬連・ワイド等77.5%、馬単・三連複75%、三連単72.5%です。券種によって控除率が違うため、三連単ほど大きな優位性が確認できないと採用しない設計にします。[JRAの払戻率と馬券ルール](https://www.jra.go.jp/kouza/baken/)
+
+## 3戦略の役割
+
+### 安定型
+
+- 単勝・複勝・ワイド・馬連が中心
+- 的中確率と予測の安定性を優先
+- 点数を少なくする
+- 期待値がプラスでも、不確実性が高ければ見送り
+- 1レースの上限は、その時点の資金の2%
+
+### バランス型
+
+- 全券種を候補にする
+- 的中確率、期待値、払戻し、点数のバランスを取る
+- 馬単・三連複も積極的に比較
+- 1レースの上限は3%
+
+### 穴狙い型
+
+- 高配当候補を狙うが、期待値がプラスのものだけ
+- 三連複・三連単・穴馬を含むフォーメーションも対象
+- 外れる確率が高いため、金額はむしろ小さくする
+- 1レースの上限は1.5%
+
+穴狙いだから大金を賭けるのではなく、「少額で大きな払戻しを狙う」という扱いです。
+
+## 金額配分
+
+金額の基礎には、予測優位性に応じて賭け金を変えるKelly基準を使います。ただし、通常のKelly基準は予測確率が少し間違うだけで賭けすぎる危険があります。確率推定に不確実性がある場合、金額を縮小した方が実運用成績を改善できるという研究があります。[推定誤差を考慮したKelly基準の研究](https://pubsonline.informs.org/doi/abs/10.1287/deca.2013.0271)
+
+そのため、初期版では次を使います。
+
+- Kelly基準が示した金額の25%だけ採用
+- 上記の戦略別上限を超えない
+- 100円単位へ切り下げ
+- 同じ結果に依存する買い目を大量に重ねない
+- 同時に結果待ちになっている金額にも上限を設ける
+- モデル同士の予測差が大きいほど金額を減らす
+
+競馬用モデルの実務報告でも、推定誤差などを理由に1/2または1/3 Kellyが推奨されています。今回はさらに慎重な1/4から始めます。[Benterの競馬予測・資金配分報告](https://ryansbrill.com/pdf/statistics_in_sports_papers/Horse_Race_Betting_Benter1994.pdf)
+
+## 一日の資金管理
+
+以前決めたとおり、「本日の予算」は賭け金総額ではなく、許容できる損失額として扱います。
+
+例えば開始時に1万円を設定した場合、
+
+- 払戻金は後続レースの資金へ加算
+- 未確定馬券は使用中資金として別管理
+- 確定損失が1万円になったら終了
+- 利益が出ても、1レース上限の計算は急激に増やさない
+- 連敗しても取り返すための増額はしない
+- ユーザーが手動で上限を引き上げない限り継続不可
+
+とします。
+
+さらに、結果待ちの馬券総額は、その時点の利用可能資金の10%までにします。複数会場のレースが近い時間に続いても、資金が一度に拘束されすぎません。
+
+## 見送り条件
+
+次のどれかに該当したら、推奨買い目を出さず「見送り」にします。
+
+- 安全側期待値が基準未満
+- 確率モデルとランキングモデルが大きく食い違う
+- 必要な当日データが更新されていない
+- 取消や騎手変更後の再計算が終わっていない
+- オッズ変動が大きく、安全幅を計算できない
+- 高期待値が一つの不安定な特徴だけに依存している
+- 資金上限へ到達している
+- 最低購入額100円では適切な配分ができない
+
+「予想は表示できるが購入は推奨しない」と、「データ不足で予想自体が信用できない」も区別して表示します。
+
+## 基準値の決め方
+
+2%、3%、1.5%、1/4 Kellyなどは最初の安全上限です。回収率が最も高くなる数字へ無条件に調整するのではなく、2022～2024年で、
+
+- 回収率
+- 最大損失
+- 最大連敗
+- 月別の安定性
+- 購入回数
+- 券種別成績
+
+を比較して決定し、2025年のテスト前に固定します。
+
+この「安全側期待値＋1/4 Kelly＋戦略別上限＋明確な見送り」を、買い目・資金管理部分の基本設計として進めてよいですか？
+
+> 詳細に関してはわからないから進めていいよ。
+
+<details><summary>2 previous messages</summary>
+
+> 了解です。買い目・資金管理はこの方針で進めます。引き続き「brainstorming」で、次はデータ取得から予想表示までの全体構成を整理します。ここからは仕組み同士の関係が増えるので、必要なら見て確認できる形にします。
+>
+> <details><summary>Explored a file</summary>
+>
+> - Read `~/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.1/skills/brainstorming/SKILL.md`
+>
+> </details>
+</details>
+
+この次の部分は、見せた方が分かりやすそうです。進めながらブラウザ上に構成図や比較図を作れます。まだ新しい機能で、通常より処理量が増える可能性がありますが、使いますか？承諾いただければ開きます。
+
+> アーティファクトとかで作成できるということ？
+> HTML？
+> いずれにしろ、今後修正などの際にロジックを確認するために人間がわかりやすいようにという部分は必要だと思っている。
+
+<details><summary>2 previous messages</summary>
+
+> はい、その理解です。HTMLベースのアーティファクトとして、処理の流れ・判断条件・入出力を人が追える構成図にできます。将来の修正時にもロジック確認へ使える正式な設計資料として残す方針にします。今回は「visualize」と、brainstormingのビジュアル伴走手順を使います。
+>
+> <details><summary>Ran 8 commands</summary>
+>
+> - Ran `Get-Content -Raw 'C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39\skills\visualize\SKILL.md'; Get-Content -Raw 'C:\Users\msato\.codex\plugins\cache\openai-curated-remote\superpowers\6.4.1\skills\brainstorming\visual-companion.md'`
+> - Ran `$p='C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39\skills\visualize\SKILL.md'; $lines=Get-Content $p; "LINES=$($lines.Count)"; $lines | Select-Object -Skip 180 -First 220`
+> - Ran `$p='C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39\skills\visualize\SKILL.md'; Get-Content $p | Select-Object -First 180`
+> - Ran `python 'C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39\scripts\render.py' 'C:\Users\msato\.codex\visualizations\2026\09\24\01a0d394-ecf3-79a0-94ea-6aa9bc949e61\keiba-logic-map.html' 'C:\Users\msato\Documents\Codex\2026-09-24\new-chat-6\work\keiba-logic-preview.html'; Select-String -Path 'C:\Users\msato\.codex\visualizations\2026\09\24\01a0d394-ecf3-79a0-94ea-6aa9bc949e61\keiba-logic-map.html' -Pattern '\\"|\\n'; Get-Item 'C:\Users\msato\.codex\visualizations\2026\09\24\01a0d394-ecf3-79a0-94ea-6aa9bc949e61\keiba-logic-map.html' | Select-Object FullName,Length`
+> - Ran `Get-Command py,python3 -ErrorAction SilentlyContinue | Select-Object Name,Source`
+> - Ran `& 'C:\Users\msato\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' 'C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39\scripts\render.py' 'C:\Users\msato\.codex\visualizations\2026\09\24\01a0d394-ecf3-79a0-94ea-6aa9bc949e61\keiba-logic-map.html' 'C:\Users\msato\Documents\Codex\2026-09-24\new-chat-6\work\keiba-logic-preview.html'; Get-Item 'C:\Users\msato\Documents\Codex\2026-09-24\new-chat-6\work\keiba-logic-preview.html' | Select-Object FullName,Length`
+> - Ran `rg --files 'C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39' | rg 'render\.py$|frame-template\.html$|helper\.js$'`
+> - Ran `& 'C:\Users\msato\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' 'C:\Users\msato\.codex\plugins\cache\openai-bundled\visualize\1.0.39\skills\visualize\scripts\render.py' 'C:\Users\msato\.codex\visualizations\2026\09\24\01a0d394-ecf3-79a0-94ea-6aa9bc949e61\keiba-logic-map.html' 'C:\Users\msato\Documents\Codex\2026-09-24\new-chat-6\work\keiba-logic-preview.html'; Get-Item 'C:\Users\msato\Documents\Codex\2026-09-24\new-chat-6\work\keiba-logic-preview.html' | Select-Object FullName,Length`
+>
+> </details>
+</details>
+
+各工程をクリックすると、入力・判断条件・出力を確認できます。この内容は最終仕様書にも残し、将来の修正時にロジックを追える基準資料にします。
