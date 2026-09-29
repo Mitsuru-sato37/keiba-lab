@@ -91,3 +91,10 @@ Golden Race -> one day -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
 - Commits: `2f4c48c` Python bootstrap, `ce7d7a0` domain contracts, `5891861` settings/API, `cfcb289` Web shell.
 - CI workflow: `.github/workflows/ci.yml` defines required `python` and `web` jobs.
 - Docker and .NET SDK runtime checks were explicitly skipped with warnings because they are unavailable in this environment; Phase 0 mandatory checks do not require them.
+
+## Phase 1 evidence (in progress, 2026-09-29)
+
+- Dedicated branch: `codex/phase-1-db-schema`.
+- Added SQLAlchemy metadata, Alembic configuration, initial migration, and temporal append-only repository contract.
+- Focused persistence tests and the full local verification command pass (27 Python tests plus Web checks).
+- PostgreSQL runtime round-trip remains pending because Docker is unavailable; Alembic offline SQL generation succeeds.
