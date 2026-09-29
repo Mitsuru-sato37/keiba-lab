@@ -84,3 +84,10 @@ Exit: UI can trace a displayed recommendation to stored calculation evidence.
 
 Golden Race -> one day -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
 2019-2025 final training -> 2026 live validation.
+
+## Phase 0 evidence (2026-09-29)
+
+- Local acceptance: `pwsh -File scripts/verify.ps1` passed (23 Python tests and Web test/typecheck/lint/build).
+- Commits: `2f4c48c` Python bootstrap, `ce7d7a0` domain contracts, `5891861` settings/API, `cfcb289` Web shell.
+- CI workflow: `.github/workflows/ci.yml` defines required `python` and `web` jobs.
+- Docker and .NET SDK runtime checks were explicitly skipped with warnings because they are unavailable in this environment; Phase 0 mandatory checks do not require them.

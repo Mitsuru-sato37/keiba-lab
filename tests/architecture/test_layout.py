@@ -10,6 +10,10 @@ def test_required_repository_boundaries_exist() -> None:
         ROOT / "pyproject.toml",
         ROOT / "src" / "keiba_lab",
         ROOT / "docs" / "ARCHITECTURE.md",
+        ROOT / "README.md",
+        ROOT / "scripts" / "verify.ps1",
+        ROOT / ".env.example",
+        ROOT / "infra" / "compose.yaml",
     )
     assert all(path.exists() for path in required)
 
