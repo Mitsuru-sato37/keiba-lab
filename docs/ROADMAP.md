@@ -100,3 +100,10 @@ Golden Race -> one day -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
 - PostgreSQL runtime round-trip remains pending because Docker is unavailable; Alembic offline SQL generation succeeds.
 
 - Current Phase 1 checkpoint: `a3c90dd` plus the verified Web/API vertical slice on `codex/phase-1-db-schema`.
+
+## Phase 2 boundary evidence (2026-09-30)
+
+- Branch: `codex/phase-2-jvlink-boundary`.
+- Added `ImportBatch`, `ImportRecord`, and idempotent staged/promoted/failed batch handling in `keiba_lab.providers.import_contract`.
+- Contract tests cover duplicate immutability, promotion idempotency, and failed-batch exclusion.
+- No JV-Link installation, use key, credentials, external login, or network dependency was introduced.
