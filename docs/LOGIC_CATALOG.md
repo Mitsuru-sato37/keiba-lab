@@ -51,3 +51,9 @@ IDs and, for experiments, immutable run IDs.
 Phase 1 validates `EV-001` and `RECO-001` with a deterministic win-only
 fixture. Its `WAIT` state is reserved for missing or stale inputs and is not
 equivalent to a market-value `SKIP`.
+
+Phase 1 implementation references:
+
+- `DATA-001`: `keiba_lab.persistence.temporal.InMemoryObservationRepository.eligible`
+- `EV-001`: `keiba_lab.application.recommendation.evaluate_win_recommendation`
+- `RECO-001`: `keiba_lab.application.vertical_slice.Phase1Service.update_odds`

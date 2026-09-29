@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from keiba_lab.application.policy import RecommendationPolicy
 from keiba_lab.application.recommendation import WinRecommendation, evaluate_win_recommendation
+from keiba_lab.persistence.repositories import AppendOnlyRepository
 from keiba_lab.providers.ports import RaceProvider
 
 
@@ -45,6 +46,10 @@ class Phase1Service:
         self._predictions: dict[str, PredictionEvidence] = {}
         self._recommendations: dict[str, list[WinRecommendation]] = {}
         self._odds: dict[str, Decimal] = {}
+        self.race_snapshots = AppendOnlyRepository()
+        self.prediction_snapshots = AppendOnlyRepository()
+        self.odds_snapshots = AppendOnlyRepository()
+        self.recommendation_artifacts = AppendOnlyRepository()
 
     def list_today(self, race_date: date, as_of_time: datetime) -> tuple[RaceSummary, ...]:
         requested_date = race_date.date() if isinstance(race_date, datetime) else race_date
@@ -77,6 +82,20 @@ class Phase1Service:
                 calculated_at=as_of_time,
             ),
         )
+        if prediction.prediction_snapshot_id not in {
+            item["prediction_snapshot_id"] for item in self.prediction_snapshots.all()
+        }:
+            self.race_snapshots.append(
+                f"SNAPSHOT-{race_id}",
+                {
+                    "race_id": race_id,
+                    "as_of_time": as_of_time.isoformat(),
+                    "logic_version": "SNAP-001:v1",
+                },
+            )
+            self.prediction_snapshots.append(
+                prediction.prediction_snapshot_id, prediction.model_dump(mode="json")
+            )
         latest = self._recommendations.get(race_id, [])
         recommendation = (
             latest[-1]
@@ -100,7 +119,26 @@ class Phase1Service:
         result = evaluate_win_recommendation(
             MappingProxyType(detail.prediction.model_dump()), odds_input, self.policy
         )
+        odds_id = f"ODDS-{race_id}-{len(self.odds_snapshots.all()) + 1}"
+        self.odds_snapshots.append(
+            odds_id,
+            {
+                "odds_snapshot_id": odds_id,
+                "race_id": race_id,
+                "current_odds": str(odds_input),
+                "prediction_snapshot_id": detail.prediction.prediction_snapshot_id,
+            },
+        )
         self._recommendations.setdefault(race_id, []).append(result)
+        recommendation_id = f"RECO-{race_id}-{len(self.recommendation_artifacts.all()) + 1}"
+        self.recommendation_artifacts.append(
+            recommendation_id,
+            {
+                "recommendation_id": recommendation_id,
+                **result.model_dump(mode="json"),
+                "odds_snapshot_id": odds_id,
+            },
+        )
         return result
 
     def recommendations(self, race_id: str) -> tuple[WinRecommendation, ...]:

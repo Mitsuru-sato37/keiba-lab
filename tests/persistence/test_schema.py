@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from keiba_lab.persistence.repositories import AppendOnlyRepository
 from keiba_lab.persistence.schema import metadata
 from keiba_lab.persistence.temporal import InMemoryObservationRepository, ObservationRecord
 
@@ -13,6 +14,12 @@ def test_schema_keeps_required_lifecycle_tables() -> None:
         "horse_prediction",
         "recommendation",
         "backtest_run",
+        "race",
+        "runner",
+        "odds_snapshot",
+        "prediction_snapshot",
+        "logic_version",
+        "policy_version",
     }
     assert required <= set(metadata.tables)
 
@@ -60,3 +67,13 @@ def test_temporal_repository_rejects_naive_as_of_time_and_duplicate_append() -> 
         repo.eligible("R1", datetime(2022, 1, 1))
     with pytest.raises(ValueError, match="append-only"):
         repo.append(row)
+
+
+def test_artifact_repository_is_append_only_and_returns_immutable_payload() -> None:
+    repo = AppendOnlyRepository()
+    payload = {"snapshot_id": "S1", "logic_version": "LOGIC:v1"}
+    repo.append("S1", payload)
+    payload["logic_version"] = "LOGIC:v2"
+    assert repo.get("S1")["logic_version"] == "LOGIC:v1"
+    with pytest.raises(ValueError, match="append-only"):
+        repo.append("S1", {})

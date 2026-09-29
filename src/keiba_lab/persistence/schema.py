@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Integer,
     MetaData,
+    Numeric,
     String,
     Table,
     Text,
@@ -17,12 +18,12 @@ metadata = MetaData()
 
 def lineage_columns() -> tuple[Column[Any], ...]:
     return (
-        Column("calculated_at", DateTime(timezone=True)),
-        Column("snapshot_id", String(128)),
-        Column("feature_version", String(128)),
-        Column("model_version", String(128)),
-        Column("calibration_version", String(128)),
-        Column("logic_version", String(128)),
+        Column("calculated_at", DateTime(timezone=True), nullable=False),
+        Column("snapshot_id", String(128), nullable=False),
+        Column("feature_version", String(128), nullable=False),
+        Column("model_version", String(128), nullable=False),
+        Column("calibration_version", String(128), nullable=False),
+        Column("logic_version", String(128), nullable=False),
     )
 
 
@@ -44,6 +45,25 @@ raw_observation = Table(
     UniqueConstraint("provider", "provider_key", "effective_from", name="uq_raw_provider_version"),
 )
 
+race = Table(
+    "race",
+    metadata,
+    Column("race_id", String(128), primary_key=True),
+    Column("provider", String(128), nullable=False),
+    Column("scheduled_post_time", DateTime(timezone=True), nullable=False),
+    Column("payload", JSON, nullable=False),
+)
+
+runner = Table(
+    "runner",
+    metadata,
+    Column("runner_id", String(128), primary_key=True),
+    Column("race_id", String(128), nullable=False),
+    Column("horse_id", String(128), nullable=False),
+    Column("horse_number", Integer, nullable=False),
+    Column("payload", JSON, nullable=False),
+)
+
 race_snapshot = Table(
     "race_snapshot",
     metadata,
@@ -54,6 +74,28 @@ race_snapshot = Table(
     Column("feature_version", String(128), nullable=False),
     Column("logic_version", String(128), nullable=False),
     Column("membership", JSON, nullable=False),
+)
+
+odds_snapshot = Table(
+    "odds_snapshot",
+    metadata,
+    Column("odds_snapshot_id", String(128), primary_key=True),
+    Column("race_id", String(128), nullable=False),
+    Column("horse_id", String(128), nullable=False),
+    Column("observed_at", DateTime(timezone=True), nullable=False),
+    Column("current_odds", Numeric(12, 4), nullable=False),
+    Column("provider", String(128), nullable=False),
+    Column("logic_version", String(128), nullable=False),
+)
+
+prediction_snapshot = Table(
+    "prediction_snapshot",
+    metadata,
+    Column("prediction_snapshot_id", String(128), primary_key=True),
+    Column("race_id", String(128), nullable=False),
+    Column("as_of_time", DateTime(timezone=True), nullable=False),
+    *lineage_columns(),
+    Column("payload", JSON, nullable=False),
 )
 
 horse_prediction = Table(
@@ -86,4 +128,22 @@ backtest_run = Table(
     Column("logic_version", String(128), nullable=False),
     Column("invalid_reason", Text),
     Column("manifest", JSON, nullable=False),
+)
+
+logic_version = Table(
+    "logic_version",
+    metadata,
+    Column("logic_version_id", String(128), primary_key=True),
+    Column("logic_id", String(128), nullable=False),
+    Column("version", String(64), nullable=False),
+    Column("manifest", JSON, nullable=False),
+)
+
+policy_version = Table(
+    "policy_version",
+    metadata,
+    Column("policy_version_id", String(128), primary_key=True),
+    Column("policy_id", String(128), nullable=False),
+    Column("version", String(64), nullable=False),
+    Column("parameters", JSON, nullable=False),
 )

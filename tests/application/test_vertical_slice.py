@@ -26,6 +26,9 @@ def test_fixture_flow_keeps_prediction_immutable_when_odds_change() -> None:
     assert changed.decision == "SKIP"
     assert app.get_race(first.race_id, as_of).prediction == first_prediction
     assert len(app.recommendations(first.race_id)) == 3
+    assert len(app.prediction_snapshots.all()) == 1
+    assert len(app.odds_snapshots.all()) == 2
+    assert len(app.recommendation_artifacts.all()) == 2
 
 
 def test_phase1_service_has_no_purchase_or_result_access() -> None:
