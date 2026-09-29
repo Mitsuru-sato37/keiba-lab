@@ -265,3 +265,9 @@ The implementation is complete only when all of the following are true:
 ## Handoff Notes
 
 Implementers must account for the existing Phase 1 persistence foundation in `src/keiba_lab/persistence/`, `tests/persistence/`, `pyproject.toml`, and `uv.lock`. Preserve useful work, but do not treat the current schema as complete: it lacks the Phase 1 odds/policy/version boundaries. Do not reset or discard those files without inspecting their diff first.
+
+## Execution status (2026-09-30)
+
+- Tasks 1–7 implemented on `codex/phase-1-db-schema`.
+- Task 8 acceptance verification passed: `uv run pytest -q` (39 passed), `pwsh -File scripts/verify.ps1`, Web test/typecheck/lint/build, Alembic offline SQL generation, and `git diff --check`.
+- PostgreSQL runtime migration round-trip remains pending because Docker is unavailable; no JV-Link contract, credentials, or external login was required.
