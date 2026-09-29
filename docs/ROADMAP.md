@@ -95,6 +95,6 @@ Golden Race -> one day -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
 ## Phase 1 evidence (in progress, 2026-09-29)
 
 - Dedicated branch: `codex/phase-1-db-schema`.
-- Added SQLAlchemy metadata, Alembic configuration, initial migration, and temporal append-only repository contract.
-- Focused persistence tests and the full local verification command pass (27 Python tests plus Web checks).
+- Added SQLAlchemy metadata, Alembic configuration, initial migration, temporal append-only repository contract, fixture provider, and configurable win-only EV policy.
+- Focused provider/persistence/application tests and the full local verification command pass (34 Python tests plus Web checks).
 - PostgreSQL runtime round-trip remains pending because Docker is unavailable; Alembic offline SQL generation succeeds.
