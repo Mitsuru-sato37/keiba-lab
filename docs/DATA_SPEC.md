@@ -83,3 +83,11 @@ The Golden Race is the chronologically earliest eligible JRA race in 2022
 available in the normalized BASE-JV dataset, ordered by post time and then
 canonical race ID. A fixture with the same contract is used before live data is
 available.
+
+## Phase 1 provider boundary
+
+Phase 1 uses deterministic fixture observations only. The fixture provider
+must preserve provider natural keys, received/effective timestamps, snapshot
+IDs, checksums, and promoted-batch status, and must apply the same as-of
+eligibility rules as the future BASE-JV adapter. No network, JV-Link, or
+credentials are required.

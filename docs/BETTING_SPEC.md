@@ -25,6 +25,20 @@ mutate the ability prediction.
 
 Reason codes are stored as structured values, not display-only prose.
 
+## Phase 1 win-only evaluation
+
+The fixture-backed Phase 1 evaluator supports only `WIN` candidates. After
+ability prediction, it computes the exact Decimal formulas:
+
+```text
+fair_odds = 1 / win_probability
+EV = win_probability * current_odds
+```
+
+Missing or stale odds produce `WAIT`; an evaluated EV below the injected,
+versioned policy threshold produces `SKIP_NO_VALUE`; a usable candidate at or
+above the threshold may produce `BUY`.
+
 ## Initial strategy policy
 
 - Stable favors win/place/wide/quinella, few selections, and low uncertainty;

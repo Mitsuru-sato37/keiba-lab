@@ -87,3 +87,12 @@ Decision -> Stake.
 - Hand-authored complex pace/scenario rules in the initial simulation.
 - Multi-user accounts, cloud tenancy, Kafka, and independently deployed
   microservices.
+
+## Phase 1 vertical-slice scope
+
+Phase 1 is a fixture-backed, win-only slice. It supports Today -> Race ->
+prediction evidence -> manual odds evaluation and exposes `BUY`, `SKIP`, or
+`WAIT`. `WAIT` means required odds/data is unavailable or stale and another
+update is expected; it is distinct from an evaluated but non-actionable
+`SKIP`. No live JV-Link connection or automatic purchase is part of this
+slice.

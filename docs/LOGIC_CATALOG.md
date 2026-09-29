@@ -47,3 +47,7 @@ specification -> implementation reference -> validation result.
 Implementation references are added when code exists. They must use stable
 module/symbol names rather than line numbers. Validation results point to test
 IDs and, for experiments, immutable run IDs.
+
+Phase 1 validates `EV-001` and `RECO-001` with a deterministic win-only
+fixture. Its `WAIT` state is reserved for missing or stale inputs and is not
+equivalent to a market-value `SKIP`.
