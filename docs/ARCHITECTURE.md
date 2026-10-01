@@ -60,7 +60,9 @@ CLI/import spool; an HTTP service is unnecessary until scheduling requires it.
 ## Module boundaries
 
 - Domain contracts contain identifiers, enums, value objects, and invariants.
-- Provider ports expose raw observations and source metadata.
+- Provider ports expose immutable observation batches, raw observations, and
+  source metadata. The collector JSON envelope is the application-level
+  boundary for the Windows/JV-Link process.
 - Repositories enforce temporal queries and append-only artifact persistence.
 - Pipeline stages accept explicit artifact IDs and an injected as-of clock.
 - Training creates immutable model artifacts and training manifests.
@@ -71,6 +73,18 @@ CLI/import spool; an HTTP service is unnecessary until scheduling requires it.
   migrations. Temporal repositories require an explicit as-of instant, while
   append-only and recommendation/result gates are enforced in both code and
   the database.
+- Phase 2 providers are tested through the deterministic fixture provider and
+  a versioned collector envelope. Import validation is whole-batch and
+  fail-closed; JV-Link COM and credentials remain outside the Python core.
+- The Windows collector shell only validates and forwards the envelope in this
+  phase. Batch promotion records an immutable batch identity and content
+  checksum before raw observations are persisted; repeating the same batch is
+  a no-op and conflicting reuse fails closed.
+- Phase 3 adds an explicit `RaceSnapshotBuilder` and a versioned Core Feature
+  v1 registry. Both receive an injected `as_of_time`, reject future or
+  superseded observations instead of silently filtering them, and emit
+  append-only artifacts with observation, data-snapshot, feature-version, and
+  logic-version lineage. Ability features reject current-race odds payloads.
 
 ## Technology decisions
 

@@ -1,7 +1,7 @@
 import random
 from datetime import UTC, datetime
 
-from keiba_application.ports import ObservationRecord
+from keiba_application.ports import ObservationBatch, ObservationRecord
 from keiba_domain.time_values import UtcInstant
 
 
@@ -10,7 +10,7 @@ class DeterministicFixtureProvider:
         self._seed = seed
         self._fixture_version = fixture_version
 
-    def observations(self) -> tuple[ObservationRecord, ...]:
+    def collect(self) -> ObservationBatch:
         random_source = random.Random(self._seed)
         received = UtcInstant.from_datetime(datetime(2022, 1, 1, tzinfo=UTC))
         records = tuple(
@@ -25,4 +25,14 @@ class DeterministicFixtureProvider:
             )
             for index in range(3)
         )
-        return records
+        return ObservationBatch(
+            batch_id=f"fixture:{self._fixture_version}:{self._seed}",
+            provider="deterministic-fixture",
+            provider_version=self._fixture_version,
+            collected_at=received,
+            records=records,
+        )
+
+    def observations(self) -> tuple[ObservationRecord, ...]:
+        """Compatibility view for callers that predate the batch contract."""
+        return self.collect().records

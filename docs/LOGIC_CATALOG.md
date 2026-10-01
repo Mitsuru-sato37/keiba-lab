@@ -9,8 +9,8 @@ a new version under the same ID unless the responsibility itself changes.
 | Logic ID | Responsibility | Required evidence |
 |---|---|---|
 | DATA-001 | Point-in-time observation eligibility | Temporal boundary tests |
-| SNAP-001 | Immutable race snapshot construction | Membership/checksum tests |
-| FEAT-001 | Core Feature v1 orchestration | Feature lineage and fixture tests |
+| SNAP-001 | Immutable as-of race snapshot construction | Temporal boundary, membership, and checksum tests |
+| FEAT-001 | Core Feature v1 values, missingness, and orchestration | Feature lineage and fixture tests |
 | MODEL-BASE-001 | Simple baseline prediction | Walk-forward prediction metrics |
 | MODEL-WIN-001 | Win/top-2/top-3 probability model | Calibration and constraint tests |
 | MODEL-RANK-001 | Race-group ranking model | Group isolation and ranking metrics |
@@ -31,6 +31,9 @@ a new version under the same ID unless the responsibility itself changes.
 | FIXTURE-001 | Deterministic synthetic observation replay | Seed/version equality tests |
 | DATA-002 | Temporal raw observation eligibility query | Temporal repository boundary tests |
 | TRACE-002 | Calculation lineage/version persistence contract | Migration column tests |
+| DATA-003 | Collector envelope validation and whole-batch import | Contract round-trip and malformed-payload tests |
+| FIXTURE-002 | Deterministic observation batch provider | Batch seed/version equality tests |
+| DATA-004 | Idempotent observation batch promotion | Duplicate promotion and conflict tests |
 
 ## Logic trace contract
 

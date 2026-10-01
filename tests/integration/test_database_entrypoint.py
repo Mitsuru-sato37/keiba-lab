@@ -27,6 +27,8 @@ def test_alembic_environment_contains_the_phase_one_migration() -> None:
     assert (ROOT / "alembic" / "env.py").is_file()
     assert [path.name for path in (ROOT / "alembic" / "versions").glob("*.py")] == [
         "0001_phase1_data_foundation.py",
+        "0002_phase2_ingestion_batches.py",
+        "0003_phase3_feature_logic_lineage.py",
     ]
 
 

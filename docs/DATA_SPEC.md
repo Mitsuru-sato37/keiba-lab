@@ -99,3 +99,40 @@ The temporal repository requires an explicit `as_of_time` and applies both
 excluding records whose `effective_to` is at or before the requested time.
 Results reference a persisted recommendation and cannot be inserted through
 the repository before that recommendation exists.
+
+## Phase 2 collector import contract
+
+Provider collection is represented as an immutable `ObservationBatch` with a
+batch ID, provider/version, UTC collection time, and records. The collector
+JSON envelope uses schema version `jra-van-observation-batch/v1`. Every record
+includes provider record type/key, temporal timestamps, a JSON payload, and a
+SHA-256 checksum of the canonical payload.
+
+The importer validates the schema version, required identifiers, UTC-only
+timestamps, unique record IDs, payload shape, and checksums before returning a
+batch. Any invalid record rejects the whole envelope; no partial batch is
+available to persistence. The deterministic fixture provider implements the
+same batch port without JRA-VAN credentials.
+
+Promoted batches are recorded in the immutable `ingestion_batches` table with
+provider/version, collection time, record count, and content checksum. A
+batch ID may be promoted once; a repeated identical promotion is idempotent,
+while reuse with different metadata or content is rejected. Raw records store
+the promoted batch ID as their ingestion lineage.
+
+## Phase 3 snapshot and feature contract
+
+`RaceSnapshotBuilder` constructs one immutable race snapshot from exactly one
+race observation and one or more runner observations. The snapshot stores its
+explicit `as_of_time`, member observation IDs, runner membership, and a
+deterministic content checksum. A record received, effective, or superseded
+after the requested time is a temporal leak and invalidates construction; it is
+not silently excluded.
+
+The Core Feature v1 registry (`core-feature-v1`) emits one feature vector per
+runner with `race_id`, `runner_id`, `as_of_time`, data-snapshot ID,
+feature-version ID, logic-version ID, source observation IDs, and explicit
+missing-field names. Its initial fields are race distance, field size, turf
+surface, gate, horse number, age, carried weight, and days since last race.
+Ability feature generation rejects odds fields and odds record types. Odds and
+market value belong to a later, separate stage.

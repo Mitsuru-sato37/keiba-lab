@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from keiba_application.ports import ObservationRecord
 from keiba_domain.time_values import UtcInstant
 from keiba_infrastructure.repositories import TemporalObservationRepository
+from keiba_infrastructure.schema import RawObservation
 from sqlalchemy.orm import Session
 
 
@@ -24,6 +25,8 @@ def observation(
         received_timestamp=instant(received_hour),
         effective_from=instant(effective_hour),
         payload={"record_id": record_id},
+        provider_record_type="race",
+        provider_record_key=f"2022-{record_id}",
     )
 
 
@@ -51,3 +54,16 @@ def test_eligible_as_of_excludes_record_after_effective_to(
 
     assert repository.eligible_as_of(instant(9))[0].record_id == "superseded"
     assert repository.eligible_as_of(instant(10)) == ()
+
+
+def test_temporal_repository_preserves_provider_record_identity(
+    migrated_session: Session,
+) -> None:
+    repository = TemporalObservationRepository(migrated_session)
+    repository.add(observation("race-1", received_hour=8, effective_hour=8))
+
+    row = migrated_session.get(RawObservation, "race-1")
+
+    assert row is not None
+    assert row.provider_record_type == "race"
+    assert row.provider_record_key == "2022-race-1"

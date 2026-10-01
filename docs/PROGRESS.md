@@ -5,64 +5,66 @@ Last updated: 2026-10-01
 
 ## Current phase
 
-Phase 1 — Database schema and migrations.
+Phase 3 — snapshot and feature engine.
 
-Phase 0 implementation is complete. Phase 1 implementation is in progress in
-the writable shared checkout, subject to the Git/Docker environment limits.
+The Phase 3 acceptance slice is implemented against deterministic observations
+and the point-in-time data boundary. It does not require JRA-VAN credentials,
+a use key, JV-Link installation, or login.
 
 ## Completed
 
-- Product specification defined.
-- Architecture specification defined.
-- Data, model, betting, and backtest specifications defined.
-- Logic catalog defined.
-- Multi-phase roadmap defined.
-- Codex/Git workflow rules defined in `AGENTS.md`.
-- Python/TypeScript project configuration and the React/Vite web shell.
-- Domain contracts for versions, UTC instants, health status, and observations.
-- Typed local settings, secret-redacting logging, and deterministic fixture provider.
-- FastAPI `/health/live` and `/health/ready` endpoints.
-- Optional PostgreSQL Docker Compose and empty Alembic migration environment.
-- Synthetic `golden-race-v1` fixture metadata and fixture tests.
-- Phase 1 SQLAlchemy contracts and Alembic foundation migration.
-- Temporal observation eligibility repository with boundary tests.
-- Database/repository append-only guards.
-- Recommendation-before-result persistence gate.
+- Product specification, architecture, data, model, betting, backtest, and
+  logic-catalog documents.
+- Python/TypeScript project configuration and React/Vite web shell.
+- Typed domain contracts, UTC instants, local settings, redacted logging, and
+  FastAPI health endpoints.
+- PostgreSQL Docker Compose and Alembic foundation migration.
+- Temporal observation eligibility, append-only guards, lineage columns, and
+  recommendation-before-result persistence gate.
+- `ObservationBatch`/`ObservationProvider` application contract.
+- Deterministic fixture provider with stable batch identity and seed behavior.
+- Versioned collector JSON envelope with checksum, UTC, duplicate-ID, and
+  fail-closed validation.
+- Windows x64 .NET 8 collector shell source and documented standard-I/O
+  handoff. .NET SDK 8.0.420 is installed in the local tool area and the
+  collector builds successfully for win-x64.
+- `ingestion_batches` migration and idempotent batch promotion. Repeating an
+  identical batch is a no-op; conflicting batch reuse fails closed.
+- Provider record type/key and ingestion batch lineage preservation in raw
+  observations.
+- Explicit as-of race snapshot construction with temporal leak rejection,
+  deterministic membership/checksum, and runner identity validation.
+- Core Feature v1 generation with explicit missing fields, feature/data/logic
+  lineage, and current-race odds rejection.
+- SQLite migration compatibility and PostgreSQL migration validation for the
+  new feature logic lineage column.
 
 ## Next implementation target
 
-Phase 2 — JRA-VAN adapter interface, beginning with the deterministic fixture
-provider and collector import contract. No JRA-VAN credentials are required
-for the fixture portion.
+Phase 4 — prediction baseline: add a first walk-forward-safe model contract on
+top of the persisted snapshot and feature artifacts.
 
 ## Constraints
 
-- Do not require JRA-VAN membership, use key, JV-Link installation, or login for Phase 0.
 - Keep the Windows/JV-Link boundary behind a provider interface.
-- Preserve all temporal, lineage, leak-prevention, and reproducibility invariants in `AGENTS.md`.
+- Preserve temporal, lineage, leak-prevention, and reproducibility invariants.
+- Do not add external enrichment to BASE-JV.
 - Never automate ticket purchase.
-
-## Handoff rule
-
-Before stopping work, update this file with what was completed, what remains, the branch name, and any blocked item that requires user input or an external credential.
+- Docker Desktop is installed and running through WSL 2. PostgreSQL validation
+  is now active. The local SDK/tool directories are ignored by Git.
 
 ## Current handoff details
 
-- Intended branch: `codex/phase-1-data-foundation`.
-- Environment limitation: this checkout's `.git` metadata is read-only, so
-  branch creation, commit, and push could not be performed by the agent; the
-  working tree remains on `main` with uncommitted Phase 0 and Phase 1 changes.
-- Environment limitation: Docker CLI is not installed; compose structure is
-  covered by offline YAML tests.
+- Branch: `codex/phase-3-snapshot-feature-engine`.
+- Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
+- Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
 
 ## Verified commands
 
-- `uv run pytest -q`: 23 passed.
-- `uv run ruff format --check .`: passed.
-- `uv run ruff check .`: passed.
-- `uv run mypy packages apps tests`: passed.
-- `pnpm test -- --run`: 1 passed.
-- `pnpm build`: passed.
-- `docker compose config`: unavailable because Docker is not installed.
-- Phase 1 SQLite migration, temporal, append-only, and result-gate tests: passed.
+- Focused Phase 3 suite: 12 passed with the project-local pytest temporary
+  directory. Full-suite verification is run before the Phase 3 checkpoint.
+- Collector shell static contract tests and real .NET build: passed.
+- PostgreSQL Alembic migration: `0002_phase2_ingestion_batches` was applied;
+  Phase 3 migration is pending final verification.
+- Full Python/TypeScript checks are rerun after the dependency update.
