@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace KeibaCollector;
 
 internal static class Program

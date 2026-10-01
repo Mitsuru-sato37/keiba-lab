@@ -27,6 +27,7 @@ obj/
 .vs/
 *.user
 *.suo
+.tools/
 
 # Local data / generated artifacts
 .local/
