@@ -113,3 +113,9 @@ timestamps, unique record IDs, payload shape, and checksums before returning a
 batch. Any invalid record rejects the whole envelope; no partial batch is
 available to persistence. The deterministic fixture provider implements the
 same batch port without JRA-VAN credentials.
+
+Promoted batches are recorded in the immutable `ingestion_batches` table with
+provider/version, collection time, record count, and content checksum. A
+batch ID may be promoted once; a repeated identical promotion is idempotent,
+while reuse with different metadata or content is rejected. Raw records store
+the promoted batch ID as their ingestion lineage.

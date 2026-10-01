@@ -36,6 +36,7 @@ class TemporalObservationRepository:
         record: ObservationRecord,
         *,
         effective_to: UtcInstant | None = None,
+        ingestion_batch_id: str | None = None,
     ) -> None:
         payload = dict(record.payload)
         effective_end = effective_to if effective_to is not None else record.effective_to
@@ -52,7 +53,7 @@ class TemporalObservationRepository:
                 effective_to=effective_end.value if effective_end is not None else None,
                 payload=payload,
                 payload_checksum=_payload_checksum(payload),
-                ingestion_batch_id=f"fixture:{record.source_version}",
+                ingestion_batch_id=ingestion_batch_id or f"fixture:{record.source_version}",
                 created_at=datetime.now(UTC),
             ),
         )

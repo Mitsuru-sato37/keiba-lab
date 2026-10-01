@@ -33,6 +33,7 @@ a new version under the same ID unless the responsibility itself changes.
 | TRACE-002 | Calculation lineage/version persistence contract | Migration column tests |
 | DATA-003 | Collector envelope validation and whole-batch import | Contract round-trip and malformed-payload tests |
 | FIXTURE-002 | Deterministic observation batch provider | Batch seed/version equality tests |
+| DATA-004 | Idempotent observation batch promotion | Duplicate promotion and conflict tests |
 
 ## Logic trace contract
 

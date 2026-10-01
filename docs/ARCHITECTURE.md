@@ -76,6 +76,10 @@ CLI/import spool; an HTTP service is unnecessary until scheduling requires it.
 - Phase 2 providers are tested through the deterministic fixture provider and
   a versioned collector envelope. Import validation is whole-batch and
   fail-closed; JV-Link COM and credentials remain outside the Python core.
+- The Windows collector shell only validates and forwards the envelope in this
+  phase. Batch promotion records an immutable batch identity and content
+  checksum before raw observations are persisted; repeating the same batch is
+  a no-op and conflicting reuse fails closed.
 
 ## Technology decisions
 

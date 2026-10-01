@@ -15,6 +15,7 @@ EXPECTED_TABLES = {
     "model_versions",
     "feature_versions",
     "logic_versions",
+    "ingestion_batches",
 }
 REQUIRED_COLUMNS = {
     "feature_snapshots": {"data_snapshot_id", "feature_version_id"},

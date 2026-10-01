@@ -4,3 +4,7 @@ class AppendOnlyViolationError(RuntimeError):
 
 class RecommendationNotPersistedError(RuntimeError):
     """Raised when a result is accessed before its recommendation exists."""
+
+
+class BatchConflictError(RuntimeError):
+    """Raised when one batch ID is reused for different content or metadata."""
