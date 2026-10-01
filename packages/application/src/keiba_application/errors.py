@@ -16,3 +16,11 @@ class TemporalLeakError(ValueError):
 
 class OddsLeakError(ValueError):
     """Raised when current-race odds enter the ability feature path."""
+
+
+class TrainingLeakError(ValueError):
+    """Raised when a training manifest contains data from its test period."""
+
+
+class PredictionInvariantError(ValueError):
+    """Raised when a prediction artifact violates probability or lineage rules."""
