@@ -56,7 +56,9 @@ class TrainedGateStrengthBaseline:
             first.feature_version_id,
         )
         if first.feature_version_id != self.training_manifest.feature_version_id:
-            raise PredictionInvariantError("feature context version does not match training manifest")
+            raise PredictionInvariantError(
+                "feature context version does not match training manifest",
+            )
 
         runner_ids = tuple(vector.runner_id for vector in vectors)
         if len(set(runner_ids)) != len(runner_ids):
@@ -188,8 +190,8 @@ class GateStrengthBaseline:
             for gate, starts in gate_starts.items()
         }
         model_manifest = {
-            "model_version_id": BASELINE_MODEL_VERSION_ID,
-            "logic_version_id": BASELINE_LOGIC_VERSION_ID,
+            "model_version_id": manifest.model_version_id,
+            "logic_version_id": manifest.logic_version_id,
             "training_manifest_id": manifest.manifest_id,
             "training_manifest_checksum": manifest.checksum,
             "overall_score": overall_score,
@@ -202,6 +204,6 @@ class GateStrengthBaseline:
             gate_starts=gate_starts,
             overall_score=overall_score,
             model_manifest_checksum=_checksum(model_manifest),
-            model_version_id=BASELINE_MODEL_VERSION_ID,
-            logic_version_id=BASELINE_LOGIC_VERSION_ID,
+            model_version_id=manifest.model_version_id,
+            logic_version_id=manifest.logic_version_id,
         )

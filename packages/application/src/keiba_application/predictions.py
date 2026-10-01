@@ -128,7 +128,9 @@ class RunnerPrediction:
         if self.top2_probability > self.top3_probability:
             raise PredictionInvariantError("top-2 probability cannot exceed top-3 probability")
         if self.raw_win_probability > self.raw_top2_probability:
-            raise PredictionInvariantError("raw win probability cannot exceed raw top-2 probability")
+            raise PredictionInvariantError(
+                "raw win probability cannot exceed raw top-2 probability",
+            )
         if self.raw_top2_probability > self.raw_top3_probability:
             raise PredictionInvariantError(
                 "raw top-2 probability cannot exceed raw top-3 probability",

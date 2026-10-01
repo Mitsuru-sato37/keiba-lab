@@ -10,6 +10,8 @@ from keiba_infrastructure.schema import (
     FeatureVersion,
     LogicVersion,
     ModelVersion,
+)
+from keiba_infrastructure.schema import (
     PredictionSnapshot as StoredPredictionSnapshot,
 )
 from sqlalchemy import func, select

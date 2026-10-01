@@ -36,16 +36,17 @@ def record(
     )
 
 
-def race_record(**kwargs: object) -> ObservationRecord:
+def race_record(*, received_hour: int = 10, effective_hour: int = 10) -> ObservationRecord:
     return record(
         "race-1",
         "race",
         {"race_id": "race-1", "distance_m": 1600, "field_size": 1, "surface": "turf"},
-        **kwargs,
+        received_hour=received_hour,
+        effective_hour=effective_hour,
     )
 
 
-def runner_record(**kwargs: object) -> ObservationRecord:
+def runner_record(*, received_hour: int = 10, effective_hour: int = 10) -> ObservationRecord:
     return record(
         "runner-1",
         "runner",
@@ -58,7 +59,8 @@ def runner_record(**kwargs: object) -> ObservationRecord:
             "carried_weight_kg": 56.0,
             "days_since_last_race": 21,
         },
-        **kwargs,
+        received_hour=received_hour,
+        effective_hour=effective_hour,
     )
 
 

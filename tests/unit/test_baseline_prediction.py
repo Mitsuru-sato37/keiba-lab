@@ -1,13 +1,17 @@
 from dataclasses import replace
 from datetime import UTC, datetime
 from math import isclose
+from typing import Any
 
 import pytest
 from keiba_application.errors import OddsLeakError, PredictionInvariantError, TrainingLeakError
 from keiba_application.predictions import TrainingExample, TrainingManifest
 from keiba_application.snapshots import FeatureVector
 from keiba_domain.time_values import UtcInstant
-from keiba_infrastructure.baseline_prediction import GateStrengthBaseline
+from keiba_infrastructure.baseline_prediction import (
+    GateStrengthBaseline,
+    TrainedGateStrengthBaseline,
+)
 
 
 def instant() -> UtcInstant:
@@ -85,7 +89,7 @@ def feature_vector(
     )
 
 
-def fitted_model() -> tuple[GateStrengthBaseline, tuple[TrainingExample, ...]]:
+def fitted_model() -> tuple[TrainedGateStrengthBaseline, tuple[TrainingExample, ...]]:
     examples = training_examples()
     return GateStrengthBaseline.fit(manifest=manifest(examples), examples=examples), examples
 
@@ -99,6 +103,25 @@ def test_baseline_fit_rejects_example_outside_manifest() -> None:
             manifest=manifest(model_examples),
             examples=model_examples + (extra,),
         )
+
+
+def test_prediction_preserves_manifest_model_version() -> None:
+    examples = training_examples()
+    manifest_v2 = TrainingManifest.create(
+        manifest_id="training-2022-v2",
+        test_year=2022,
+        training_years=(2019, 2020, 2021),
+        examples=examples,
+        feature_version_id="core-feature-v1",
+        model_version_id="baseline-gate-v2",
+        logic_version_id="MODEL-BASE-001-v1",
+    )
+    model = GateStrengthBaseline.fit(manifest=manifest_v2, examples=examples)
+
+    result = model.predict((feature_vector("runner-1", 1),))
+
+    assert result.model_version_id == "baseline-gate-v2"
+    assert result.logic_version_id == "MODEL-BASE-001-v1"
 
 
 def test_gate_strength_uses_binary_laplace_rates_and_overall_prior() -> None:
@@ -201,7 +224,7 @@ def test_prediction_rejects_current_race_odds() -> None:
         {"feature_version_id": "other-feature"},
     ],
 )
-def test_prediction_rejects_mixed_feature_context(changed: dict[str, object]) -> None:
+def test_prediction_rejects_mixed_feature_context(changed: dict[str, Any]) -> None:
     model, _ = fitted_model()
     first = feature_vector("runner-1", 1)
     second = replace(feature_vector("runner-2", 2), **changed)
