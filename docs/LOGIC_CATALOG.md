@@ -31,6 +31,8 @@ a new version under the same ID unless the responsibility itself changes.
 | FIXTURE-001 | Deterministic synthetic observation replay | Seed/version equality tests |
 | DATA-002 | Temporal raw observation eligibility query | Temporal repository boundary tests |
 | TRACE-002 | Calculation lineage/version persistence contract | Migration column tests |
+| DATA-003 | Collector envelope validation and whole-batch import | Contract round-trip and malformed-payload tests |
+| FIXTURE-002 | Deterministic observation batch provider | Batch seed/version equality tests |
 
 ## Logic trace contract
 

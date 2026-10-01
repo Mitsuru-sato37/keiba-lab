@@ -99,3 +99,17 @@ The temporal repository requires an explicit `as_of_time` and applies both
 excluding records whose `effective_to` is at or before the requested time.
 Results reference a persisted recommendation and cannot be inserted through
 the repository before that recommendation exists.
+
+## Phase 2 collector import contract
+
+Provider collection is represented as an immutable `ObservationBatch` with a
+batch ID, provider/version, UTC collection time, and records. The collector
+JSON envelope uses schema version `jra-van-observation-batch/v1`. Every record
+includes provider record type/key, temporal timestamps, a JSON payload, and a
+SHA-256 checksum of the canonical payload.
+
+The importer validates the schema version, required identifiers, UTC-only
+timestamps, unique record IDs, payload shape, and checksums before returning a
+batch. Any invalid record rejects the whole envelope; no partial batch is
+available to persistence. The deterministic fixture provider implements the
+same batch port without JRA-VAN credentials.

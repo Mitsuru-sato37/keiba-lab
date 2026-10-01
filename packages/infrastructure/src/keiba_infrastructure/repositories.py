@@ -38,17 +38,18 @@ class TemporalObservationRepository:
         effective_to: UtcInstant | None = None,
     ) -> None:
         payload = dict(record.payload)
+        effective_end = effective_to if effective_to is not None else record.effective_to
         self._session.add(
             RawObservation(
                 observation_id=record.record_id,
                 provider=record.source,
                 provider_version=record.source_version,
-                provider_record_type="observation",
-                provider_record_key=record.record_id,
+                provider_record_type=record.provider_record_type,
+                provider_record_key=record.provider_record_key,
                 source_timestamp=record.source_timestamp.value,
                 received_timestamp=record.received_timestamp.value,
                 effective_from=record.effective_from.value,
-                effective_to=effective_to.value if effective_to else None,
+                effective_to=effective_end.value if effective_end is not None else None,
                 payload=payload,
                 payload_checksum=_payload_checksum(payload),
                 ingestion_batch_id=f"fixture:{record.source_version}",
@@ -82,6 +83,9 @@ class TemporalObservationRepository:
                 received_timestamp=_utc_instant(row.received_timestamp),
                 effective_from=_utc_instant(row.effective_from),
                 payload=row.payload,
+                provider_record_type=row.provider_record_type,
+                provider_record_key=row.provider_record_key,
+                effective_to=_utc_instant(row.effective_to) if row.effective_to else None,
             )
             for row in rows
         )
