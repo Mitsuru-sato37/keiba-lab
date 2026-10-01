@@ -11,6 +11,7 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+.pnpm-store/
 dist/
 build/
 *.egg-info/
@@ -31,6 +32,7 @@ obj/
 .local/
 tmp/
 logs/
+.superpowers/
 
 # Editors / OS
 .vscode/

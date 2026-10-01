@@ -50,3 +50,28 @@ git pull --ff-only
 Create a `codex/<topic>` branch for a coherent phase or vertical slice. Before moving to another PC, commit and push the branch. On the other PC, fetch and switch to the same branch.
 
 Do not use uncommitted local files as the only copy of important work.
+
+## Local development commands
+
+The default checks use synthetic fixtures and do not require JRA-VAN, JV-Link,
+credentials, PostgreSQL, or Docker.
+
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\python -m pip install -e . pytest httpx ruff mypy
+.venv\Scripts\python -m pytest -q
+.venv\Scripts\python -m ruff format --check .
+.venv\Scripts\python -m ruff check .
+.venv\Scripts\python -m mypy packages apps tests
+.venv\Scripts\python -m alembic upgrade head
+pnpm install
+pnpm test -- --run
+pnpm build
+```
+
+The optional PostgreSQL development service is available with
+`docker compose up -d postgres`. Its schema is intentionally empty in Phase 0;
+business migrations begin in Phase 1.
+
+Phase 1 repository checks use temporary SQLite databases so temporal and
+append-only behavior can be tested without starting PostgreSQL.

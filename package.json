@@ -1,0 +1,13 @@
+{
+  "name": "keiba-lab",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "test": "pnpm --filter web test -- --run",
+    "build": "pnpm --filter web build",
+    "typecheck": "pnpm --filter web typecheck"
+  }
+}
