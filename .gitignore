@@ -1,0 +1,39 @@
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Node / TypeScript
+node_modules/
+coverage/
+*.tsbuildinfo
+
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Local data / generated artifacts
+.local/
+tmp/
+logs/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
