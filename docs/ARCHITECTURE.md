@@ -67,6 +67,10 @@ CLI/import spool; an HTTP service is unnecessary until scheduling requires it.
 - Backtest orchestration controls reveal order; stages cannot access results
   through a shared unrestricted session.
 - Explanation reads persisted traces and never recomputes or fabricates them.
+- Phase 1 persistence is defined by SQLAlchemy contracts and Alembic
+  migrations. Temporal repositories require an explicit as-of instant, while
+  append-only and recommendation/result gates are enforced in both code and
+  the database.
 
 ## Technology decisions
 

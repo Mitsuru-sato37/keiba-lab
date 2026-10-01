@@ -83,3 +83,19 @@ The Golden Race is the chronologically earliest eligible JRA race in 2022
 available in the normalized BASE-JV dataset, ordered by post time and then
 canonical race ID. A fixture with the same contract is used before live data is
 available.
+
+## Phase 1 persistence contract
+
+The first migration creates `raw_observations`, `data_snapshots`,
+`feature_snapshots`, `prediction_snapshots`, `recommendations`, `results`, and
+the `model_versions`, `feature_versions`, and `logic_versions` registries.
+Calculation artifacts carry non-null snapshot/data lineage and the applicable
+feature, model, and logic version identifiers. Raw observations, snapshots,
+predictions, and recommendations are protected by database append-only
+triggers as well as repository guards.
+
+The temporal repository requires an explicit `as_of_time` and applies both
+`received_timestamp <= as_of_time` and `effective_from <= as_of_time`, while
+excluding records whose `effective_to` is at or before the requested time.
+Results reference a persisted recommendation and cannot be inserted through
+the repository before that recommendation exists.

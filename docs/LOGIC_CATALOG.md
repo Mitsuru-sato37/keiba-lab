@@ -27,6 +27,10 @@ a new version under the same ID unless the responsibility itself changes.
 | LEAK-003 | Current-race odds in ability inputs | Must-fail schema/input fixture |
 | LEAK-004 | Premature result/payout access | Capability/repository denial test |
 | VERSION-001 | Required version presence | Must-fail persistence fixture |
+| OPS-HEALTH-001 | Local process/readiness health reporting | API health contract tests |
+| FIXTURE-001 | Deterministic synthetic observation replay | Seed/version equality tests |
+| DATA-002 | Temporal raw observation eligibility query | Temporal repository boundary tests |
+| TRACE-002 | Calculation lineage/version persistence contract | Migration column tests |
 
 ## Logic trace contract
 
