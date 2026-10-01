@@ -90,6 +90,9 @@ class FeatureSnapshot(Base):
     feature_version_id: Mapped[str] = mapped_column(
         String(128), ForeignKey("feature_versions.version_id"), nullable=False
     )
+    logic_version_id: Mapped[str] = mapped_column(
+        String(128), ForeignKey("logic_versions.version_id"), nullable=False
+    )
     values: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

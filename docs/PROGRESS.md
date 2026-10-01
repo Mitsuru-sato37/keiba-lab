@@ -5,10 +5,11 @@ Last updated: 2026-10-01
 
 ## Current phase
 
-Phase 2 — JRA-VAN adapter interface.
+Phase 3 — snapshot and feature engine.
 
-The Phase 2 acceptance slice is implemented without requiring JRA-VAN
-credentials, a use key, JV-Link installation, or login.
+The Phase 3 acceptance slice is implemented against deterministic observations
+and the point-in-time data boundary. It does not require JRA-VAN credentials,
+a use key, JV-Link installation, or login.
 
 ## Completed
 
@@ -31,11 +32,17 @@ credentials, a use key, JV-Link installation, or login.
   identical batch is a no-op; conflicting batch reuse fails closed.
 - Provider record type/key and ingestion batch lineage preservation in raw
   observations.
+- Explicit as-of race snapshot construction with temporal leak rejection,
+  deterministic membership/checksum, and runner identity validation.
+- Core Feature v1 generation with explicit missing fields, feature/data/logic
+  lineage, and current-race odds rejection.
+- SQLite migration compatibility and PostgreSQL migration validation for the
+  new feature logic lineage column.
 
 ## Next implementation target
 
-Phase 3 — snapshot and feature engine: build the race snapshot contract and
-Core Feature v1 registry on top of the now-stable point-in-time data boundary.
+Phase 4 — prediction baseline: add a first walk-forward-safe model contract on
+top of the persisted snapshot and feature artifacts.
 
 ## Constraints
 
@@ -48,16 +55,16 @@ Core Feature v1 registry on top of the now-stable point-in-time data boundary.
 
 ## Current handoff details
 
-- Branch: `codex/phase-2-jra-van-adapter`.
+- Branch: `codex/phase-3-snapshot-feature-engine`.
 - Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
 - Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
 
 ## Verified commands
 
-- Full Python suite and integration migration checks: 36 passed with the
-  project-local pytest temporary directory.
+- Focused Phase 3 suite: 12 passed with the project-local pytest temporary
+  directory. Full-suite verification is run before the Phase 3 checkpoint.
 - Collector shell static contract tests and real .NET build: passed.
-- PostgreSQL Alembic migration: `0002_phase2_ingestion_batches` applied;
-  11 tables present.
+- PostgreSQL Alembic migration: `0002_phase2_ingestion_batches` was applied;
+  Phase 3 migration is pending final verification.
 - Full Python/TypeScript checks are rerun after the dependency update.

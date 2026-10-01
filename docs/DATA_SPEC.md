@@ -119,3 +119,20 @@ provider/version, collection time, record count, and content checksum. A
 batch ID may be promoted once; a repeated identical promotion is idempotent,
 while reuse with different metadata or content is rejected. Raw records store
 the promoted batch ID as their ingestion lineage.
+
+## Phase 3 snapshot and feature contract
+
+`RaceSnapshotBuilder` constructs one immutable race snapshot from exactly one
+race observation and one or more runner observations. The snapshot stores its
+explicit `as_of_time`, member observation IDs, runner membership, and a
+deterministic content checksum. A record received, effective, or superseded
+after the requested time is a temporal leak and invalidates construction; it is
+not silently excluded.
+
+The Core Feature v1 registry (`core-feature-v1`) emits one feature vector per
+runner with `race_id`, `runner_id`, `as_of_time`, data-snapshot ID,
+feature-version ID, logic-version ID, source observation IDs, and explicit
+missing-field names. Its initial fields are race distance, field size, turf
+surface, gate, horse number, age, carried weight, and days since last race.
+Ability feature generation rejects odds fields and odds record types. Odds and
+market value belong to a later, separate stage.
