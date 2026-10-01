@@ -25,7 +25,8 @@ credentials, a use key, JV-Link installation, or login.
 - Versioned collector JSON envelope with checksum, UTC, duplicate-ID, and
   fail-closed validation.
 - Windows x64 .NET 8 collector shell source and documented standard-I/O
-  handoff. Actual .NET build is deferred because this host has no .NET SDK.
+  handoff. .NET SDK 8.0.420 is installed in the local tool area and the
+  collector builds successfully for win-x64.
 - `ingestion_batches` migration and idempotent batch promotion. Repeating an
   identical batch is a no-op; conflicting batch reuse fails closed.
 - Provider record type/key and ingestion batch lineage preservation in raw
@@ -42,19 +43,21 @@ Core Feature v1 registry on top of the now-stable point-in-time data boundary.
 - Preserve temporal, lineage, leak-prevention, and reproducibility invariants.
 - Do not add external enrichment to BASE-JV.
 - Never automate ticket purchase.
-- Docker CLI and .NET SDK are not installed in this environment. PostgreSQL
-  and collector build validation remain deferred; SQLite integration tests and
-  static collector contract tests are active.
+- Docker Desktop is installed and running through WSL 2. PostgreSQL validation
+  is now active. The local SDK/tool directories are ignored by Git.
 
 ## Current handoff details
 
 - Branch: `codex/phase-2-jra-van-adapter`.
-- Phase 2 provider commit: `64ae7ca`.
+- Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
 - Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
 
 ## Verified commands
 
-- Full Python suite and integration migration checks: rerun before commit.
-- Collector shell static contract tests: passed.
-- Full Python/TypeScript checks are rerun before the phase commit.
+- Full Python suite and integration migration checks: 36 passed with the
+  project-local pytest temporary directory.
+- Collector shell static contract tests and real .NET build: passed.
+- PostgreSQL Alembic migration: `0002_phase2_ingestion_batches` applied;
+  11 tables present.
+- Full Python/TypeScript checks are rerun after the dependency update.
