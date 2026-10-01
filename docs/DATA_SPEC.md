@@ -136,3 +136,18 @@ missing-field names. Its initial fields are race distance, field size, turf
 surface, gate, horse number, age, carried weight, and days since last race.
 Ability feature generation rejects odds fields and odds record types. Odds and
 market value belong to a later, separate stage.
+
+## Phase 4 baseline prediction contract
+
+The baseline prediction path accepts a validated training manifest and
+immutable feature vectors. The 2022 test fold trains only on 2019-2021
+examples; a test-year or incomplete training manifest is a run-invalidating
+training leak.
+
+Each persisted prediction stores the relational data snapshot, feature,
+model, and logic version lineage. Its immutable JSON payload retains
+training_manifest_id, model_manifest_checksum, optional
+calibration_version_id, and runner-level raw/constrained probabilities,
+ranking score, uncertainty, and disagreement. Prediction snapshots are
+append-only and a newer model version creates a new artifact rather than
+updating an earlier prediction.

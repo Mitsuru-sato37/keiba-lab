@@ -16,6 +16,27 @@ LightGBM compatibility is retained as an experiment, not an initial runtime
 dependency. Neural networks and a dedicated trifecta model are excluded from
 v1.
 
+## Phase 4 baseline contract
+
+MODEL-BASE-001 is the first deterministic walk-forward model. Its first
+test year is 2022 and its training manifest must contain only 2019-2021
+examples. A manifest that contains 2022 or a missing training year is invalid.
+
+The initial implementation is baseline-gate-v1. It calculates a binary
+Laplace-smoothed win rate per gate using (wins + 1) / (starts + 2) and uses
+the training-wide prior for missing or unseen gates. It consumes Core Feature
+v1 values only; current-race odds are rejected from both training and
+inference.
+
+For each race, scores are normalized into win probabilities. Top-2 and top-3
+probabilities are derived deterministically and must satisfy
+win <= top2 <= top3; race win probabilities must sum to 1. Raw and
+constrained values, ranking score, uncertainty, disagreement, and all model,
+feature, logic, data, and training-manifest lineage are retained.
+
+Calibration is not applied to this baseline. Its calibration version is
+explicitly absent until a separately versioned calibration layer is added.
+
 ## Core Feature v1
 
 Begin with roughly 50-100 reproducible features covering:

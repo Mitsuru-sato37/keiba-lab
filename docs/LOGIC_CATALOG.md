@@ -35,6 +35,20 @@ a new version under the same ID unless the responsibility itself changes.
 | FIXTURE-002 | Deterministic observation batch provider | Batch seed/version equality tests |
 | DATA-004 | Idempotent observation batch promotion | Duplicate promotion and conflict tests |
 
+## Phase 4 implementation references
+
+MODEL-BASE-001 is implemented by
+keiba_infrastructure.baseline_prediction.GateStrengthBaseline and
+keiba_infrastructure.baseline_prediction.TrainedGateStrengthBaseline.
+Validation evidence is in
+tests/unit/test_baseline_prediction.py and
+tests/integration/test_prediction_persistence.py.
+
+The application contracts are in
+keiba_application.predictions.TrainingManifest,
+keiba_application.predictions.PredictionSnapshot, and
+keiba_infrastructure.predictions.PredictionSnapshotRepository.
+
 ## Logic trace contract
 
 Every material stage trace records:
