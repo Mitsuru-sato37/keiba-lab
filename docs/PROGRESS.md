@@ -71,7 +71,7 @@ Phase 5 — backtest engine and leak guard.
 - Phase 4 contract and baseline unit suite: 21 passed.
 - Phase 4 prediction persistence suite: 4 passed.
 - Phase 4 documentation contract suite: 4 passed.
+- Full Python suite: 74 passed; Ruff and mypy passed.
+- Web test, production build, and typecheck passed.
 - Collector shell static contract tests and real .NET build: passed.
-- PostgreSQL Alembic migration: `0002_phase2_ingestion_batches` was applied;
-  Phase 3 migration is pending final verification.
-- Full Python/TypeScript checks are rerun after the dependency update.
+- PostgreSQL Alembic migration: `0003_phase3_feature_logic_lineage` verified.
