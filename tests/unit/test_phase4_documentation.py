@@ -36,6 +36,6 @@ def test_logic_catalog_records_phase4_implementation_references() -> None:
 def test_progress_moves_handoff_to_phase5() -> None:
     document = read_doc("PROGRESS.md")
 
-    assert "Phase 4 — baseline and prediction interfaces" in document
-    assert "Phase 5 — backtest engine and leak guard" in document
+    assert "Phase 4 acceptance slice" in document
+    assert "Phase 5 — backtest engine and leak guard (completed)" in document
     assert "MODEL-BASE-001" in document

@@ -1,15 +1,21 @@
 # Progress
 
 Status: Current handoff
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 
 ## Current phase
 
-Phase 4 — baseline and prediction interfaces (completed).
+Phase 5 — backtest engine and leak guard (completed).
 
 The Phase 4 acceptance slice is implemented against deterministic training
 examples and immutable Phase 3 feature vectors. It does not require JRA-VAN
 credentials, a use key, JV-Link installation, or login.
+
+The Phase 5 acceptance slice adds deterministic walk-forward orchestration,
+run-invalidating leak/version guards, a recommendation-before-result
+capability gate, and append-only backtest manifests. It does not claim
+live-equivalent betting performance when historical odds coverage is
+insufficient.
 
 ## Completed
 
@@ -45,10 +51,16 @@ credentials, a use key, JV-Link installation, or login.
   current-race odds and persists model/training lineage.
 - Prediction snapshots are append-only and preserve raw/constrained runner
   probabilities.
+- Walk-forward backtest contracts enforce the 2022 first fold and expanding
+  training windows through 2025.
+- LEAK-001 through LEAK-004 and VERSION-001 are recorded as run-invalidating
+  guard results.
+- Backtest run, fold, guard, and artifact manifests are persisted by migration
+  `0004_phase5_backtest_records` with append-only guards.
 
 ## Next implementation target
 
-Phase 5 — backtest engine and leak guard.
+Phase 6 — Golden Race gated pipeline.
 
 ## Constraints
 
@@ -61,7 +73,7 @@ Phase 5 — backtest engine and leak guard.
 
 ## Current handoff details
 
-- Branch: `codex/phase-4-baseline-prediction`.
+- Branch: `codex/phase-5-backtest-leak-guard`.
 - Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
 - Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
@@ -72,6 +84,11 @@ Phase 5 — backtest engine and leak guard.
 - Phase 4 prediction persistence suite: 4 passed.
 - Phase 4 documentation contract suite: 4 passed.
 - Full Python suite: 74 passed; Ruff and mypy passed.
+- Phase 5 full Python suite: 98 passed; Ruff and mypy passed.
 - Web test, production build, and typecheck passed.
 - Collector shell static contract tests and real .NET build: passed.
 - PostgreSQL Alembic migration: `0003_phase3_feature_logic_lineage` verified.
+- SQLite migration and append-only validation: `0004_phase5_backtest_records` verified.
+- PostgreSQL runtime validation was unavailable because the local shell does not
+  expose the `docker` command; the PostgreSQL migration branch was reviewed
+  statically.

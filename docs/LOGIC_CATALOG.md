@@ -1,7 +1,7 @@
 # Logic Catalog
 
 Status: Current Source of Truth
-Last updated: 2026-09-25
+Last updated: 2026-10-02
 
 Logic IDs are stable semantic identifiers. Behavior-changing revisions create
 a new version under the same ID unless the responsibility itself changes.
@@ -34,6 +34,9 @@ a new version under the same ID unless the responsibility itself changes.
 | DATA-003 | Collector envelope validation and whole-batch import | Contract round-trip and malformed-payload tests |
 | FIXTURE-002 | Deterministic observation batch provider | Batch seed/version equality tests |
 | DATA-004 | Idempotent observation batch promotion | Duplicate promotion and conflict tests |
+| BACKTEST-001 | Walk-forward fold orchestration | Chronological order and expanding-window tests |
+| BACKTEST-002 | Immutable backtest run and artifact manifests | Migration and append-only persistence tests |
+| BACKTEST-003 | Recommendation-before-result capability gate | Partial-persistence denial test |
 
 ## Phase 4 implementation references
 
@@ -68,3 +71,19 @@ specification -> implementation reference -> validation result.
 Implementation references are added when code exists. They must use stable
 module/symbol names rather than line numbers. Validation results point to test
 IDs and, for experiments, immutable run IDs.
+
+## Phase 5 implementation references
+
+`BACKTEST-001` is implemented by
+`keiba_application.backtest_engine.BacktestOrchestrator` and its injected
+ports. `BACKTEST-002` is implemented by
+`keiba_infrastructure.schema.BacktestRun`, `BacktestFold`,
+`BacktestGuardResult`, `BacktestArtifact`, and
+`keiba_infrastructure.repositories.BacktestPersistenceRepository`.
+`BACKTEST-003` is implemented by
+`keiba_application.backtest_guards.RecommendationPersistenceGate` and
+`ResultAccessCapability`.
+
+Validation evidence is in `tests/unit/test_backtest_engine.py`,
+`tests/unit/test_backtest_guards.py`, and
+`tests/integration/test_backtest_persistence.py`.

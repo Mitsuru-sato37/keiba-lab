@@ -1,7 +1,7 @@
 # Backtest Specification
 
 Status: Current Source of Truth
-Last updated: 2026-09-25
+Last updated: 2026-10-02
 
 ## Walk-forward schedule
 
@@ -52,6 +52,24 @@ Data Snapshot -> Feature Snapshot -> Prediction -> Calibration -> Simulation
 
 Any failure sets the complete run to `invalid`. Metrics from invalid runs are
 diagnostic only and cannot be reported as official performance.
+
+## Phase 5 implementation contract
+
+`keiba_application.backtest_engine.BacktestOrchestrator` executes the ordered
+folds through injected training, prediction, recommendation, result, metric,
+and persistence ports. `keiba_application.backtest_guards.BacktestGuards`
+records LEAK-001 through LEAK-003 and VERSION-001 results, while
+`RecommendationPersistenceGate` enforces LEAK-004 through an opaque
+`ResultAccessCapability`.
+
+The `0004_phase5_backtest_records` migration persists immutable
+`backtest_runs`, `backtest_folds`, `backtest_guard_results`, and
+`backtest_artifacts` records. A failed guard or stage stops later folds and
+leaves the run invalid with diagnostic lineage preserved.
+
+Official prediction metrics are available only for a successful run. Betting
+metrics are separate and require sufficient point-in-time odds coverage; a
+coverage shortfall must be reported instead of being presented as official ROI.
 
 ## Evaluation
 
