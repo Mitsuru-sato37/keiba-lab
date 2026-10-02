@@ -216,4 +216,3 @@ Ruff, mypy, and the existing TypeScript/Vite checks.
 Each commit must have its task's focused tests passing before the next task
 starts. The branch must be fetched against `origin/main` before opening a pull
 request, and no known-failing work may be pushed as complete.
-

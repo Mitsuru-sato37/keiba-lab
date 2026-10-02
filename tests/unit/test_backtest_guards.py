@@ -9,6 +9,7 @@ from keiba_application.backtest import (
 from keiba_application.backtest_guards import (
     BacktestGuards,
     RecommendationPersistenceGate,
+    ResultAccessCapability,
 )
 from keiba_application.errors import GuardViolationError, ResultAccessDeniedError
 from keiba_application.ports import ObservationRecord
@@ -172,3 +173,9 @@ def test_result_capability_requires_every_recommendation_for_the_race() -> None:
 
     assert capability.allows("race-1")
     assert not capability.allows("race-2")
+
+
+def test_forged_result_capability_does_not_allow_result_access() -> None:
+    forged = ResultAccessCapability(_race_id="race-1", _token="guess")
+
+    assert not forged.allows("race-1")

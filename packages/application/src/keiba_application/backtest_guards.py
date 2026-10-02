@@ -17,6 +17,7 @@ GUARD_VERSIONS = {
     "LEAK-004": "LEAK-004-v1",
     "VERSION-001": "VERSION-001-v1",
 }
+_ACCESS_SECRET = object()
 
 
 def _guard_result_id(guard_id: str, checked_input_ids: Iterable[str], details: object) -> str:
@@ -153,15 +154,14 @@ class BacktestGuards:
 @dataclass(frozen=True, slots=True)
 class ResultAccessCapability:
     _race_id: str
-    _token: str
+    _token: object
 
     @classmethod
     def _issue(cls, race_id: str) -> "ResultAccessCapability":
-        token = hashlib.sha256(f"result-access:{race_id}".encode()).hexdigest()
-        return cls(_race_id=race_id, _token=token)
+        return cls(_race_id=race_id, _token=_ACCESS_SECRET)
 
     def allows(self, race_id: str) -> bool:
-        return bool(race_id) and race_id == self._race_id and bool(self._token)
+        return bool(race_id) and race_id == self._race_id and self._token is _ACCESS_SECRET
 
 
 class RecommendationPersistenceGate:

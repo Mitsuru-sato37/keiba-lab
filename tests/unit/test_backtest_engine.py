@@ -115,6 +115,11 @@ class FixtureInputProvider(BacktestInputProvider):
         return self.races_by_year[test_year]
 
 
+class ContaminatedInputProvider(FixtureInputProvider):
+    def training_examples(self, years: tuple[int, ...]) -> tuple[TrainingExample, ...]:
+        return (*super().training_examples(years), example("contaminated", 2022))
+
+
 class FixturePredictor:
     def __init__(self, events: list[str]) -> None:
         self.events = events
@@ -186,6 +191,21 @@ class FixtureStore(BacktestArtifactStore):
         self.persist = persist
         self.predictions: dict[str, PredictionSnapshot] = {}
         self.recommendations: dict[str, RecommendationArtifact] = {}
+        self.run_manifests: list[BacktestSpec] = []
+        self.fold_manifests: list[tuple[str, tuple[int, ...]]] = []
+        self.artifacts: list[tuple[str, str, str]] = []
+
+    def persist_run_manifest(self, spec: BacktestSpec) -> None:
+        self.events.append("persist-run-manifest")
+        self.run_manifests.append(spec)
+
+    def persist_fold_manifest(self, fold_id: str, training_years: tuple[int, ...]) -> None:
+        self.events.append(f"persist-fold-manifest:{fold_id}")
+        self.fold_manifests.append((fold_id, training_years))
+
+    def persist_artifact(self, artifact_id: str, artifact_kind: str, artifact_ref_id: str) -> None:
+        self.events.append(f"persist-artifact:{artifact_kind}:{artifact_ref_id}")
+        self.artifacts.append((artifact_id, artifact_kind, artifact_ref_id))
 
     def persist_prediction(self, prediction: PredictionSnapshot) -> None:
         self.events.append(f"persist-prediction:{prediction.race_id}")
@@ -268,6 +288,14 @@ def test_orchestrator_processes_races_in_order_and_expands_training_window() -> 
     result = BacktestOrchestrator().run(make_spec(), execution_services)
 
     assert result.status is BacktestStatus.SUCCEEDED
+    assert isinstance(execution_services.artifact_store, FixtureStore)
+    store = execution_services.artifact_store
+    assert store.run_manifests == [make_spec()]
+    assert store.fold_manifests == [
+        ("fold-2022", (2019, 2020, 2021)),
+        ("fold-2023", (2019, 2020, 2021, 2022)),
+    ]
+    assert store.artifacts
     assert provider.training_requests == [(2019, 2020, 2021), (2019, 2020, 2021, 2022)]
     assert events.index("predict:race-2022-a") < events.index("persist-recommendation:race-2022-a")
     assert events.index("persist-recommendation:race-2022-a") < events.index("result:race-2022-a")
@@ -309,6 +337,20 @@ def test_failed_temporal_guard_invalidates_run_and_stops_later_folds() -> None:
     assert result.official_metrics_available is False
     assert provider.race_requests == [2022]
     assert not any(event.startswith("predict:") for event in events)
+
+
+def test_training_contamination_records_leak_guard_before_invalidating_run() -> None:
+    events: list[str] = []
+    provider = ContaminatedInputProvider({2022: (race("race-1", 2022, offset_minutes=1),)})
+
+    result = BacktestOrchestrator().run(
+        make_spec(test_years=(2022,)),
+        services(provider, events),
+    )
+
+    assert result.status is BacktestStatus.INVALID
+    assert result.guard_result_ids
+    assert "guard:LEAK-002:fail" in events
 
 
 def test_current_race_odds_never_reach_prediction() -> None:

@@ -67,6 +67,17 @@ class RecommendationService(Protocol):
 
 
 class BacktestArtifactStore(Protocol):
+    def persist_run_manifest(self, spec: BacktestSpec) -> None: ...
+
+    def persist_fold_manifest(self, fold_id: str, training_years: tuple[int, ...]) -> None: ...
+
+    def persist_artifact(
+        self,
+        artifact_id: str,
+        artifact_kind: str,
+        artifact_ref_id: str,
+    ) -> None: ...
+
     def persist_prediction(self, prediction: PredictionSnapshot) -> None: ...
 
     def persist_recommendation(self, recommendation: RecommendationArtifact) -> None: ...
@@ -109,17 +120,36 @@ class BacktestOrchestrator:
         odds_coverages: list[float] = []
 
         try:
+            services.artifact_store.persist_run_manifest(spec)
             for fold in spec.folds:
                 fold_ids.append(fold.fold_id)
                 examples = services.input_provider.training_examples(fold.training_years)
-                training_manifest = TrainingManifest.create(
-                    manifest_id=f"training-{spec.run_id}-{fold.fold_id}",
-                    test_year=fold.test_year,
-                    training_years=fold.training_years,
-                    examples=examples,
-                    feature_version_id=spec.feature_version_id,
-                    model_version_id=spec.model_version_id,
-                    logic_version_id=spec.logic_version_id,
+                try:
+                    training_manifest = TrainingManifest.create(
+                        manifest_id=f"training-{spec.run_id}-{fold.fold_id}",
+                        test_year=fold.test_year,
+                        training_years=fold.training_years,
+                        examples=examples,
+                        feature_version_id=spec.feature_version_id,
+                        model_version_id=spec.model_version_id,
+                        logic_version_id=spec.logic_version_id,
+                    )
+                except ValueError as error:
+                    self._check_and_record(
+                        services,
+                        guard_result_ids,
+                        GuardResult.failed(
+                            guard_result_id=f"guard-training-{fold.fold_id}",
+                            guard_id="LEAK-002",
+                            guard_version="LEAK-002-v1",
+                            checked_input_ids=(example.example_id for example in examples),
+                            details={"error": str(error)},
+                        ),
+                    )
+                    raise
+                services.artifact_store.persist_fold_manifest(
+                    fold.fold_id,
+                    training_manifest.training_years,
                 )
                 self._check_and_record(
                     services,
@@ -178,8 +208,18 @@ class BacktestOrchestrator:
                     )
                     services.artifact_store.persist_prediction(prediction)
                     artifact_ids.append(prediction.prediction_snapshot_id)
+                    services.artifact_store.persist_artifact(
+                        f"artifact-prediction-{prediction.prediction_snapshot_id}",
+                        "prediction",
+                        prediction.prediction_snapshot_id,
+                    )
                     recommendation = services.recommendation_service.create(prediction)
                     services.artifact_store.persist_recommendation(recommendation)
+                    services.artifact_store.persist_artifact(
+                        f"artifact-recommendation-{recommendation.recommendation_id}",
+                        "recommendation",
+                        recommendation.recommendation_id,
+                    )
                     recommendation_ids = services.artifact_store.persisted_recommendation_ids(
                         race.race_id,
                     )
@@ -190,6 +230,11 @@ class BacktestOrchestrator:
                     )
                     result = services.result_reader.reveal(race.race_id, capability)
                     results.append(result)
+                    services.artifact_store.persist_artifact(
+                        f"artifact-result-{result.result_id}",
+                        "result",
+                        result.result_id,
+                    )
                     odds_coverages.append(race.odds_coverage)
 
             prediction_metrics = services.metrics.prediction_metrics(tuple(results))
