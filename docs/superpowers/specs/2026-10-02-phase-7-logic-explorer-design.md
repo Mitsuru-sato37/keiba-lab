@@ -84,6 +84,23 @@ Selecting a timeline item opens the Logic Explorer detail for that stage. Back
 controls return to the previous product view without changing the fixture or
 inventing a new calculation.
 
+### Validation summary presentation
+
+The first 2022 validation race is presented in three reading layers so a user
+can understand it without knowing the internal data model:
+
+1. **まず見る情報** shows the race date and number, the BUY/SKIP decision,
+   winning runner, and payout.
+2. **詳しい内容** shows the Japanese-localized prediction time, training
+   window, and runner-level probabilities and results using horse numbers
+   rather than internal IDs.
+3. **備考** shows the synthetic-fixture limitation, the recommendation-result
+   persistence rule, and the internal race ID for traceability.
+
+The three layers use the same order on desktop and mobile. Internal IDs remain
+available for auditability but are secondary to the human-readable race and
+horse labels.
+
 ## Data contract
 
 The web package owns a read-only fixture adapter whose types mirror the
