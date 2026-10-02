@@ -1,7 +1,7 @@
 # Phase 7 Logic Explorer Mock Design
 
-**Date:** 2026-10-02  
-**Status:** Approved design  
+**Date:** 2026-10-02
+**Status:** Approved design
 **Scope:** A deterministic React mock UI for tracing a Golden Race recommendation
 from the displayed outcome back to its stored calculation evidence.
 
