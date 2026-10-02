@@ -158,3 +158,79 @@ class Result(Base):
     )
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     persisted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class BacktestRun(Base):
+    __tablename__ = "backtest_runs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'running', 'succeeded', 'invalid')",
+            name="ck_backtest_run_status",
+        ),
+    )
+
+    run_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    manifest: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    manifest_checksum: Mapped[str] = mapped_column(String(128), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class BacktestFold(Base):
+    __tablename__ = "backtest_folds"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'running', 'succeeded', 'invalid')",
+            name="ck_backtest_fold_status",
+        ),
+    )
+
+    fold_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        String(128), ForeignKey("backtest_runs.run_id"), nullable=False
+    )
+    test_year: Mapped[int] = mapped_column(Integer, nullable=False)
+    training_years: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    manifest: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    manifest_checksum: Mapped[str] = mapped_column(String(128), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class BacktestGuardResult(Base):
+    __tablename__ = "backtest_guard_results"
+    __table_args__ = (
+        CheckConstraint("status IN ('pass', 'fail')", name="ck_backtest_guard_status"),
+    )
+
+    guard_result_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        String(128), ForeignKey("backtest_runs.run_id"), nullable=False
+    )
+    fold_id: Mapped[str | None] = mapped_column(
+        String(128), ForeignKey("backtest_folds.fold_id")
+    )
+    guard_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    guard_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(8), nullable=False)
+    checked_input_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class BacktestArtifact(Base):
+    __tablename__ = "backtest_artifacts"
+
+    artifact_id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        String(128), ForeignKey("backtest_runs.run_id"), nullable=False
+    )
+    fold_id: Mapped[str | None] = mapped_column(
+        String(128), ForeignKey("backtest_folds.fold_id")
+    )
+    artifact_kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    artifact_ref_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    manifest: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

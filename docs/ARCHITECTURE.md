@@ -1,7 +1,7 @@
 # Architecture
 
 Status: Current Source of Truth
-Last updated: 2026-09-25
+Last updated: 2026-10-02
 
 ## Architectural choice
 
@@ -85,6 +85,11 @@ CLI/import spool; an HTTP service is unnecessary until scheduling requires it.
   superseded observations instead of silently filtering them, and emit
   append-only artifacts with observation, data-snapshot, feature-version, and
   logic-version lineage. Ability features reject current-race odds payloads.
+- Phase 5 adds `BacktestOrchestrator` and `BacktestGuards` as application-layer
+  services. The orchestrator injects a restricted result reader and receives a
+  `ResultAccessCapability` only after recommendation persistence; it never
+  shares an unrestricted result repository with prediction stages. Failed
+  guards mark the complete run to `invalid`.
 
 ## Technology decisions
 
@@ -113,6 +118,8 @@ Exact dependency versions are selected and locked during skeleton creation.
 - Retries must not create duplicate logical artifacts.
 - Manual correction creates a new observation/snapshot; it never edits history.
 - Failed leak/version guards mark the complete backtest run `invalid`.
+- Backtest run, fold, guard, and artifact manifests are persisted append-only
+  with data, feature, model, logic, training, seed, and code lineage.
 
 ## Security and secrets
 

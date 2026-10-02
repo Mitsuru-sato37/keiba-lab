@@ -24,3 +24,15 @@ class TrainingLeakError(ValueError):
 
 class PredictionInvariantError(ValueError):
     """Raised when a prediction artifact violates probability or lineage rules."""
+
+
+class BacktestInvariantError(ValueError):
+    """Raised when a backtest contract or manifest violates an invariant."""
+
+
+class GuardViolationError(ValueError):
+    """Raised when a backtest leak or version guard fails."""
+
+
+class ResultAccessDeniedError(PermissionError):
+    """Raised when results are requested before recommendation persistence."""

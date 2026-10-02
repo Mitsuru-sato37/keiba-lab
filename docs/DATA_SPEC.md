@@ -151,3 +151,21 @@ calibration_version_id, and runner-level raw/constrained probabilities,
 ranking score, uncertainty, and disagreement. Prediction snapshots are
 append-only and a newer model version creates a new artifact rather than
 updating an earlier prediction.
+
+## Phase 5 backtest engine and leak guard
+
+The backtest engine persists an immutable run manifest, fold manifests, guard
+results, and produced artifact references through the
+`0004_phase5_backtest_records` migration. The records are stored in
+`backtest_runs`, `backtest_folds`, `backtest_guard_results`, and
+`backtest_artifacts`, with run and fold lineage retained in every record.
+
+`BacktestOrchestrator` processes each test race in chronological order and
+does not admit a test year to the next training window until its fold has
+completed. `ResultAccessCapability` is issued only after every recommendation
+for that race has been persisted. Any LEAK-001 through LEAK-004 or
+VERSION-001 failure invalidates the complete run.
+
+Prediction metrics and betting metrics are separate artifacts. Historical odds
+coverage is recorded with the betting evaluation; insufficient coverage allows
+prediction reporting but does not support an official ROI claim.
