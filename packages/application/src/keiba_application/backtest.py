@@ -1,7 +1,7 @@
 import hashlib
 import json
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 from .errors import BacktestInvariantError
@@ -224,6 +224,8 @@ class BacktestRunResult:
     artifact_ids: tuple[str, ...]
     official_metrics_available: bool
     diagnostic: str | None
+    prediction_metrics: Mapping[str, object] = field(default_factory=dict)
+    betting_metrics: Mapping[str, object] | None = None
 
     @classmethod
     def invalid(
@@ -241,4 +243,6 @@ class BacktestRunResult:
             artifact_ids=(),
             official_metrics_available=False,
             diagnostic=diagnostic,
+            prediction_metrics={},
+            betting_metrics=None,
         )
