@@ -19,11 +19,11 @@ type ProductNavigationProps = {
 
 function ProductNavigation({ view, onNavigate }: ProductNavigationProps) {
   return (
-    <nav aria-label="Product navigation" className="app-navigation">
+    <nav aria-label="メインメニュー" className="app-navigation">
       {([
-        ["today", "Today"],
-        ["race", "Race"],
-        ["logic", "Logic Explorer"],
+        ["today", "レース一覧"],
+        ["race", "レース詳細"],
+        ["logic", "予想の根拠"],
       ] as const).map(([target, label]) => (
         <button
           aria-current={view === target ? "page" : undefined}

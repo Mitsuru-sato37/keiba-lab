@@ -1,4 +1,5 @@
 import type { RecommendationDecision } from "../goldenRaceFixture";
+import { decisionLabel } from "../uiLabels";
 
 type StatusBadgeProps = {
   decision: RecommendationDecision;
@@ -7,7 +8,7 @@ type StatusBadgeProps = {
 export function StatusBadge({ decision }: StatusBadgeProps) {
   return (
     <span className={`status-badge status-badge-${decision.toLowerCase()}`}>
-      {decision}
+      {decisionLabel(decision)}
     </span>
   );
 }

@@ -10,7 +10,8 @@ from the displayed outcome back to its stored calculation evidence.
 The first web experience should let the user understand why a recommendation
 is `BUY` or `SKIP` without requiring an API, JRA-VAN subscription, or expert
 knowledge. The screen must make the calculation path visible while preserving
-the repository's auditability rules.
+the repository's auditability rules. User-facing labels and explanations are
+Japanese; stable internal IDs and domain decision codes remain unchanged.
 
 Phase 7 succeeds when the mock UI can:
 
@@ -26,6 +27,10 @@ Phase 7 succeeds when the mock UI can:
 7. show the first 2022 one-day validation race with runner probabilities,
    recommendation, and gated result summary; and
 8. pass deterministic component tests, a production build, and type checking.
+
+All user-facing navigation, headings, labels, buttons, and explanatory text
+must be Japanese. Technical identifiers may remain in their original form for
+traceability.
 
 The mock does not claim live performance and does not purchase tickets.
 

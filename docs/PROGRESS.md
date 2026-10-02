@@ -84,7 +84,8 @@ does not claim real-world 2022 performance or official ROI.
   separates prediction metrics from odds-dependent betting metrics.
 - Phase 7 typed Golden Race fixture, Today/Race views, Logic Explorer evidence,
   deterministic navigation, and a first-2022 validation race summary are
-  implemented without an API dependency.
+  implemented without an API dependency. User-facing web labels are Japanese;
+  internal race IDs and decision codes remain stable.
 - Expansion Slice 1 deterministic 2022 one-day fixture, input provider,
   replayable validation runner, and leak/gate/odds-coverage tests.
 

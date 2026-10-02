@@ -16,16 +16,16 @@ describe("Logic Explorer view", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Logic Explorer" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Ability prediction" })).toBeVisible();
-    expect(screen.getByText("Form score features")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "予想の根拠" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "能力予測" })).toBeVisible();
+    expect(screen.getByText("走力スコアの特徴量")).toBeVisible();
     expect(screen.getByText("FEATURE-CORE-V1")).toBeVisible();
-    expect(screen.queryByText("Current-race odds")).not.toBeInTheDocument();
+    expect(screen.queryByText("当該レースのオッズ")).not.toBeInTheDocument();
     expect(screen.getAllByText("未提供").length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("button", { name: "Recommendation" }));
+    fireEvent.click(screen.getByRole("button", { name: "最終判定" }));
     expect(onSelectStage).toHaveBeenCalledWith("recommendation");
-    fireEvent.click(screen.getByRole("button", { name: "Back to Race" }));
+    fireEvent.click(screen.getByRole("button", { name: "レース詳細に戻る" }));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 });
