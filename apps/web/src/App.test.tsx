@@ -7,6 +7,12 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Today" })).toBeVisible();
+    expect(
+      screen.getByRole("navigation", { name: "Product navigation" }),
+    ).toBeVisible();
+    expect(screen.getByText(/Synthetic fixture/)).toBeVisible();
+    expect(screen.getByRole("navigation")).toHaveClass("app-navigation");
+    expect(screen.getByRole("main")).toHaveClass("app-shell");
 
     fireEvent.click(
       screen.getByRole("button", { name: "Open Golden Race SKIP" }),

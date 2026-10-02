@@ -5,7 +5,7 @@ Last updated: 2026-10-02
 
 ## Current phase
 
-Phase 6 — dummy-data Golden Race (implementation in progress).
+Phase 7 — Logic Explorer mock (implementation in progress).
 
 Phase 5 — backtest engine and leak guard (completed).
 
@@ -19,11 +19,15 @@ capability gate, and append-only backtest manifests. It does not claim
 live-equivalent betting performance when historical odds coverage is
 insufficient.
 
-The Phase 6 slice now has an approved design and implementation plan. The
-deterministic Golden Race contracts, BUY/SKIP fixture cases, seeded gated
-pipeline, immutable calculation artifacts, `TRACE-001` traces, policy replay,
-and SQLite/PostgreSQL migration are implemented. Final documentation and
-repository-wide verification remain before the Phase 6 pull request.
+The Phase 6 slice has been completed and merged in PR #5. The deterministic
+Golden Race contracts, BUY/SKIP fixture cases, seeded gated pipeline,
+immutable calculation artifacts, `TRACE-001` traces, policy replay, and
+SQLite/PostgreSQL migration are implemented and verified.
+
+The Phase 7 slice has an approved design and implementation plan. The
+deterministic React mock now presents Today, Race, and Logic Explorer views
+against typed Golden Race evidence. Final styling verification and the Phase 7
+pull request remain.
 
 ## Completed
 
@@ -74,10 +78,12 @@ repository-wide verification remain before the Phase 6 pull request.
   append-only protections.
 - Betting-policy replay preserves the original prediction checksum and
   separates prediction metrics from odds-dependent betting metrics.
+- Phase 7 typed Golden Race fixture, Today/Race views, Logic Explorer evidence,
+  and deterministic navigation are implemented without an API dependency.
 
 ## Next implementation target
 
-Phase 6 — Golden Race gated pipeline final verification and pull request.
+Phase 7 — Logic Explorer mock final verification and pull request.
 
 ## Constraints
 
@@ -90,7 +96,7 @@ Phase 6 — Golden Race gated pipeline final verification and pull request.
 
 ## Current handoff details
 
-- Branch: `codex/phase-6-golden-race`.
+- Branch: `codex/phase-7-logic-explorer`.
 - Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
 - Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
@@ -109,6 +115,7 @@ Phase 6 — Golden Race gated pipeline final verification and pull request.
   `0005_phase6_golden_race` verified.
 - Phase 6 targeted tests: contracts, pipeline, replay, persistence, result gate,
   and end-to-end flow pass.
+- Phase 7 web suite: 10 tests passed; typecheck and production build passed.
 - PostgreSQL Docker runtime validation: Docker Desktop 4.93.0 with PostgreSQL
   16 Alpine is healthy, and Alembic is at
   `0005_phase6_golden_race (head)`.

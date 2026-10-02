@@ -12,6 +12,41 @@ import { TodayView } from "./TodayView";
 
 type AppView = "today" | "race" | "logic";
 
+type ProductNavigationProps = {
+  view: AppView;
+  onNavigate: (view: AppView) => void;
+};
+
+function ProductNavigation({ view, onNavigate }: ProductNavigationProps) {
+  return (
+    <nav aria-label="Product navigation" className="app-navigation">
+      {([
+        ["today", "Today"],
+        ["race", "Race"],
+        ["logic", "Logic Explorer"],
+      ] as const).map(([target, label]) => (
+        <button
+          aria-current={view === target ? "page" : undefined}
+          key={target}
+          onClick={() => onNavigate(target)}
+          type="button"
+        >
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function Shell({ view, onNavigate, children }: ProductNavigationProps & { children: React.ReactNode }) {
+  return (
+    <main className="app-shell">
+      <ProductNavigation view={view} onNavigate={onNavigate} />
+      {children}
+    </main>
+  );
+}
+
 export function AppShell() {
   const [view, setView] = useState<AppView>("today");
   const [selectedCaseId, setSelectedCaseId] =
@@ -33,15 +68,15 @@ export function AppShell() {
 
   if (view === "today") {
     return (
-      <main className="app-shell">
+      <Shell view={view} onNavigate={setView}>
         <TodayView cases={goldenRaceCases} onSelectRace={selectRace} />
-      </main>
+      </Shell>
     );
   }
 
   if (view === "race") {
     return (
-      <main className="app-shell">
+      <Shell view={view} onNavigate={setView}>
         <RaceView
           race={selectedRace}
           onBack={() => setView("today")}
@@ -50,18 +85,18 @@ export function AppShell() {
             setView("logic");
           }}
         />
-      </main>
+      </Shell>
     );
   }
 
   return (
-    <main className="app-shell">
+    <Shell view={view} onNavigate={setView}>
       <LogicExplorerView
         race={selectedRace}
         stageId={safeStageId}
         onBack={() => setView("race")}
         onSelectStage={setSelectedStageId}
       />
-    </main>
+    </Shell>
   );
 }
