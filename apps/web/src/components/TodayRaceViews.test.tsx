@@ -57,12 +57,15 @@ describe("Today and Race views", () => {
     const onSelectRace = vi.fn();
     render(<TodayView cases={goldenRaceCases} onSelectRace={onSelectRace} />);
 
-    expect(screen.getByRole("heading", { name: "2022年最初の検証レース" })).toBeVisible();
-    expect(screen.getByText("validation-2022-0105-r01")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "まず見る情報" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "2022年1月5日 1R" })).toBeVisible();
+    expect(screen.getByText(/validation-2022-0105-r01/)).toBeVisible();
+    expect(screen.getByText("2022年1月5日 10:00（日本時間）")).toBeVisible();
     expect(screen.getByText("66.7%")).toBeVisible();
     expect(screen.getByText("33.3%")).toBeVisible();
     expect(screen.getAllByText("購入").length).toBeGreaterThan(0);
-    expect(screen.getByText("勝ち馬：validation-2022-0105-r01-h01")).toBeVisible();
+    expect(screen.getByText("勝ち馬")).toBeVisible();
+    expect(screen.getAllByText("1番")).toHaveLength(2);
     expect(screen.getByText("280円")).toBeVisible();
     expect(screen.getByText(/合成テストデータです/)).toBeVisible();
   });

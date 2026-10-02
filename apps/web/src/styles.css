@@ -113,6 +113,7 @@ h2 {
 .validation-race-summary {
   display: grid;
   gap: 1rem;
+  padding: 1.5rem;
 }
 
 .validation-race-header {
@@ -122,28 +123,130 @@ h2 {
   justify-content: space-between;
 }
 
+.summary-overview,
+.summary-details,
+.summary-notes {
+  display: grid;
+  gap: 1rem;
+}
+
+.summary-overview {
+  background: linear-gradient(135deg, #eef9f5 0%, #ffffff 72%);
+  border: 1px solid #cfe5dc;
+  border-radius: 0.9rem;
+  padding: 1.25rem;
+}
+
+.summary-overview > h2,
+.summary-section-heading h2 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.validation-race-header h3 {
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.summary-kicker {
+  color: #5a6b75;
+  margin: 0.4rem 0 0;
+}
+
+.summary-key-facts {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-key-fact {
+  background: #ffffff;
+  border: 1px solid #d8e1e6;
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+}
+
+.summary-key-fact span {
+  color: #5a6b75;
+  font-size: 0.9rem;
+}
+
+.summary-key-fact strong {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.summary-key-fact-primary {
+  border: 2px solid #2d8a5a;
+}
+
+.summary-details,
+.summary-notes {
+  background: #ffffff;
+  border: 1px solid #d8e1e6;
+  border-radius: 0.9rem;
+  padding: 1.25rem;
+}
+
+.summary-section-heading {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.summary-section-heading .eyebrow {
+  margin: 0;
+}
+
+.summary-detail-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.summary-detail-list .evidence-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(7rem, 0.35fr) 1fr;
+}
+
+.summary-notes {
+  background: #f7fafb;
+}
+
+.summary-notes .fixture-note,
+.summary-notes .trace-note {
+  margin: 0;
+}
+
+.trace-note {
+  color: #5a6b75;
+  font-size: 0.9rem;
+}
+
 .validation-runner-table-wrap {
   overflow-x: auto;
 }
 
 .validation-runner-table {
   border-collapse: collapse;
-  min-width: 620px;
+  min-width: 480px;
   width: 100%;
 }
 
 .validation-runner-table th,
 .validation-runner-table td {
   border-bottom: 1px solid #e8eef1;
-  padding: 0.7rem 0.5rem;
+  padding: 0.8rem 0.65rem;
   text-align: left;
 }
 
 .validation-runner-table thead th {
   color: #5a6b75;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .validation-runner-table caption {
@@ -246,6 +349,30 @@ h2 {
 @media (max-width: 640px) {
   .app-shell {
     padding-inline: 1rem;
+  }
+
+  .validation-race-summary,
+  .summary-overview,
+  .summary-details,
+  .summary-notes {
+    padding: 1rem;
+  }
+
+  .validation-race-header {
+    flex-direction: column;
+  }
+
+  .summary-key-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-detail-list .evidence-row {
+    gap: 0.25rem;
+    grid-template-columns: 1fr;
+  }
+
+  .summary-detail-list .evidence-row dd {
+    text-align: left;
   }
 
   .race-heading-row {
