@@ -1,9 +1,11 @@
 # Progress
 
-Status: Current handoff
+Status: Current implementation handoff
 Last updated: 2026-10-02
 
 ## Current phase
+
+Phase 6 — dummy-data Golden Race (implementation in progress).
 
 Phase 5 — backtest engine and leak guard (completed).
 
@@ -16,6 +18,12 @@ run-invalidating leak/version guards, a recommendation-before-result
 capability gate, and append-only backtest manifests. It does not claim
 live-equivalent betting performance when historical odds coverage is
 insufficient.
+
+The Phase 6 slice now has an approved design and implementation plan. The
+deterministic Golden Race contracts, BUY/SKIP fixture cases, seeded gated
+pipeline, immutable calculation artifacts, `TRACE-001` traces, policy replay,
+and SQLite/PostgreSQL migration are implemented. Final documentation and
+repository-wide verification remain before the Phase 6 pull request.
 
 ## Completed
 
@@ -57,10 +65,19 @@ insufficient.
   guard results.
 - Backtest run, fold, guard, and artifact manifests are persisted by migration
   `0004_phase5_backtest_records` with append-only guards.
+- Golden Race fixture v2 contains reproducible BUY and SKIP cases with odds
+  kept outside ability-prediction inputs.
+- Golden Race pipeline persists 11 pre-result stage artifacts and linked logic
+  traces, with deterministic simulation seed and version lineage.
+- Golden Race persistence migration `0005_phase6_golden_race` adds simulation,
+  odds, candidate, recommendation-item, evaluation, and trace storage with
+  append-only protections.
+- Betting-policy replay preserves the original prediction checksum and
+  separates prediction metrics from odds-dependent betting metrics.
 
 ## Next implementation target
 
-Phase 6 — Golden Race gated pipeline.
+Phase 6 — Golden Race gated pipeline final verification and pull request.
 
 ## Constraints
 
@@ -73,7 +90,7 @@ Phase 6 — Golden Race gated pipeline.
 
 ## Current handoff details
 
-- Branch: `codex/phase-5-backtest-leak-guard`.
+- Branch: `codex/phase-6-golden-race`.
 - Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
 - Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
@@ -88,7 +105,12 @@ Phase 6 — Golden Race gated pipeline.
 - Web test, production build, and typecheck passed.
 - Collector shell static contract tests and real .NET build: passed.
 - PostgreSQL Alembic migration: `0003_phase3_feature_logic_lineage` verified.
-- SQLite migration and append-only validation: `0004_phase5_backtest_records` verified.
+- SQLite migration and append-only validation: `0004_phase5_backtest_records` and
+  `0005_phase6_golden_race` verified.
+- Phase 6 targeted tests: contracts, pipeline, replay, persistence, result gate,
+  and end-to-end flow pass.
 - PostgreSQL Docker runtime validation: Docker Desktop 4.93.0 with PostgreSQL
   16 Alpine is healthy, and Alembic is at
-  `0004_phase5_backtest_records (head)`.
+  `0005_phase6_golden_race (head)`.
+- PostgreSQL append-only validation for Phase 6 calculation artifacts passed;
+  validation data was rolled back.

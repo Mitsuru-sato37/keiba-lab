@@ -36,3 +36,7 @@ class GuardViolationError(ValueError):
 
 class ResultAccessDeniedError(PermissionError):
     """Raised when results are requested before recommendation persistence."""
+
+
+class ResultNotAvailableError(LookupError):
+    """Raised when a recommendation exists but its result has not been revealed."""

@@ -30,6 +30,7 @@ def test_alembic_environment_contains_the_phase_one_migration() -> None:
         "0002_phase2_ingestion_batches.py",
         "0003_phase3_feature_logic_lineage.py",
         "0004_phase5_backtest_records.py",
+        "0005_phase6_golden_race.py",
     ]
 
 
