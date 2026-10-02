@@ -83,7 +83,19 @@ result access before persistence demonstrably fails.
 
 Exit: UI can trace a displayed recommendation to stored calculation evidence.
 
+## Expansion Slice 1 - 2022 one-day validation
+
+- Versioned deterministic fixture for one 2022 race day.
+- Existing walk-forward orchestrator with 2019-2021 training isolation.
+- Replayable validation report covering BUY/SKIP, temporal guards,
+  recommendation-before-result gating, and odds coverage.
+
+Exit: the one-day fixture produces a deterministic valid run, seeded leak
+violations invalidate the complete run, incomplete odds withhold betting
+metrics, and no result is revealed before recommendation persistence. This
+slice does not claim real-world 2022 performance.
+
 ## Expansion
 
-Golden Race -> one day -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
+Golden Race -> one-day validation -> all 2022 -> 2023 -> 2024 -> frozen 2025 test ->
 2019-2025 final training -> 2026 live validation.
