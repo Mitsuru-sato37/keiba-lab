@@ -1,7 +1,8 @@
 # Data Specification
 
 Status: Current Source of Truth
-Last updated: 2026-09-25
+Last updated: 2026-10-02
+
 
 ## Data-source policy
 
@@ -169,3 +170,18 @@ VERSION-001 failure invalidates the complete run.
 Prediction metrics and betting metrics are separate artifacts. Historical odds
 coverage is recorded with the betting evaluation; insufficient coverage allows
 prediction reporting but does not support an official ROI claim.
+
+## Phase 6 Golden Race persistence contract
+
+Migration `0005_phase6_golden_race` persists the Golden Race lifecycle in
+append-only `calculation_artifacts`, `logic_traces`, `simulations`,
+`simulation_results`, `odds_snapshots`, `bet_candidates`,
+`recommendation_items`, and `evaluations` tables. Every calculation artifact
+stores data snapshot, feature, model, and logic lineage. Traces retain stage
+order, input IDs, output, status, timestamp, and duration.
+
+The v2 deterministic fixture contains BUY and SKIP cases. Its runner features
+are available at the prediction as-of time, while odds are a separate later
+market input. A persisted recommendation is the structural boundary for
+result and payout reveal. Evaluation stores prediction metrics separately from
+betting metrics so incomplete odds coverage cannot be reported as ROI.

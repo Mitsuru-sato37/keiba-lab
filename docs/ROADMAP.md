@@ -1,7 +1,7 @@
 # Roadmap
 
 Status: Current Source of Truth
-Last updated: 2026-09-25
+Last updated: 2026-10-02
 
 Each phase exits only after its acceptance criteria pass. Later phases may
 refine earlier specifications but cannot relax temporal or reproducibility
@@ -68,10 +68,13 @@ Exit: all positive fixtures pass and every seeded violation invalidates its run.
 ## Phase 6 - Dummy-data Golden Race
 
 - Complete gated pipeline through evaluation using deterministic fixtures.
-- Persisted traces and betting-policy replay.
+- Persisted stage artifacts, `TRACE-001` traces, BUY/SKIP recommendations,
+  and betting-policy replay without retraining.
+- Result and payout access remains unavailable until recommendation persistence.
 
-Exit: a recommendation is reproducible end-to-end and result access before
-persistence demonstrably fails.
+Exit: both BUY and SKIP fixture cases are reproducible end-to-end, all stage
+lineage is persisted, policy replay leaves the prediction unchanged, and
+result access before persistence demonstrably fails.
 
 ## Phase 7 - Logic Explorer mock
 

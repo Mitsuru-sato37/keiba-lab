@@ -72,6 +72,24 @@ Implementation references are added when code exists. They must use stable
 module/symbol names rather than line numbers. Validation results point to test
 IDs and, for experiments, immutable run IDs.
 
+## Phase 6 implementation references
+
+`SIM-001`, `EV-001`, `BET-001`, and `MONEY-001` are exercised by
+`keiba_application.golden_race.GoldenRacePipeline` and the deterministic
+Golden Race fixture. `TRACE-001` is persisted by
+`keiba_infrastructure.repositories.GoldenRacePersistenceRepository` into
+`CalculationArtifact` and `LogicTrace` records. Policy replay is implemented
+by `keiba_application.golden_replay.PolicyReplay`; prediction and betting
+evaluation separation is implemented by
+`keiba_application.golden_replay.CoverageAwareEvaluator`.
+
+Validation evidence is in `tests/unit/test_golden_race_contracts.py`,
+`tests/unit/test_golden_race_pipeline.py`,
+`tests/unit/test_golden_race_replay.py`,
+`tests/integration/test_golden_race_persistence.py`,
+`tests/integration/test_golden_race_result_gate.py`, and
+`tests/integration/test_golden_race_end_to_end.py`.
+
 ## Phase 5 implementation references
 
 `BACKTEST-001` is implemented by

@@ -9,10 +9,10 @@ def test_golden_race_fixture_declares_stable_metadata() -> None:
         (ROOT / "fixtures" / "golden-race" / "fixture.json").read_text(encoding="utf-8"),
     )
 
-    assert fixture["fixture_version"] == "golden-race-v1"
+    assert fixture["fixture_version"] == "golden-race-v2"
     assert fixture["seed"] == 20220101
     assert fixture["source"] == "deterministic-fixture"
-    assert len(fixture["observations"]) > 0
+    assert {case["expected_decision"] for case in fixture["cases"]} == {"BUY", "SKIP"}
 
 
 def test_readme_documents_reproducible_commands() -> None:

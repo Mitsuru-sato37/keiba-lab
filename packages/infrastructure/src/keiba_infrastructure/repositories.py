@@ -3,7 +3,11 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
-from keiba_application.errors import AppendOnlyViolationError, RecommendationNotPersistedError
+from keiba_application.errors import (
+    AppendOnlyViolationError,
+    RecommendationNotPersistedError,
+    ResultNotAvailableError,
+)
 from keiba_application.ports import ObservationRecord
 from keiba_domain.time_values import UtcInstant
 from sqlalchemy import and_, or_, select
@@ -14,9 +18,22 @@ from .schema import (
     BacktestFold,
     BacktestGuardResult,
     BacktestRun,
+    BetCandidate,
+    CalculationArtifact,
+    DataSnapshot,
+    Evaluation,
+    FeatureVersion,
+    LogicTrace,
+    LogicVersion,
+    ModelVersion,
+    OddsSnapshot,
+    PredictionSnapshot,
     RawObservation,
     Recommendation,
+    RecommendationItem,
     Result,
+    Simulation,
+    SimulationResult,
 )
 
 
@@ -135,6 +152,278 @@ class ResultRepository:
             raise ValueError("result race_id must match recommendation race_id")
         self._session.add(result)
         self._session.flush()
+
+    def reveal(self, *, race_id: str, recommendation_id: str) -> Result:
+        recommendation = self._session.get(Recommendation, recommendation_id)
+        if recommendation is None:
+            raise RecommendationNotPersistedError(
+                f"recommendation {recommendation_id} is not persisted",
+            )
+        if recommendation.race_id != race_id:
+            raise ValueError("result race_id must match recommendation race_id")
+        result = self._session.scalar(
+            select(Result).where(
+                Result.race_id == race_id,
+                Result.recommendation_id == recommendation_id,
+            ),
+        )
+        if result is None:
+            raise ResultNotAvailableError(
+                f"result for recommendation {recommendation_id} is not available",
+            )
+        return result
+
+
+class GoldenRacePersistenceRepository:
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def add_stage_artifact(self, artifact: object, *, stage_order: int) -> None:
+        from keiba_application.golden_race import StageArtifact
+
+        if not isinstance(artifact, StageArtifact):
+            raise TypeError("artifact must be a StageArtifact")
+        created_at = datetime.now(UTC)
+        self._session.add(
+            CalculationArtifact(
+                artifact_id=artifact.artifact_id,
+                run_id=artifact.run_id,
+                race_id=artifact.race_id,
+                stage=artifact.stage.value,
+                output=artifact.output,
+                lineage={
+                    "data_snapshot_id": artifact.lineage.data_snapshot_id,
+                    "feature_version_id": artifact.lineage.feature_version_id,
+                    "model_version_id": artifact.lineage.model_version_id,
+                    "logic_version_id": artifact.lineage.logic_version_id,
+                    "input_ids": list(artifact.lineage.input_ids),
+                },
+                checksum=artifact.checksum,
+                status=artifact.status,
+                calculated_at=artifact.calculated_at.value,
+                created_at=created_at,
+            ),
+        )
+        self._session.flush()
+        self._session.add(
+            LogicTrace(
+                trace_id=f"trace:{artifact.artifact_id}",
+                run_id=artifact.run_id,
+                race_id=artifact.race_id,
+                stage=artifact.stage.value,
+                stage_order=stage_order,
+                artifact_ref_id=artifact.artifact_id,
+                input_ids=list(artifact.lineage.input_ids),
+                output=artifact.output,
+                data_snapshot_id=artifact.lineage.data_snapshot_id,
+                feature_version_id=artifact.lineage.feature_version_id,
+                model_version_id=artifact.lineage.model_version_id,
+                logic_version_id=artifact.lineage.logic_version_id,
+                status=artifact.status,
+                error=artifact.error,
+                calculated_at=artifact.calculated_at.value,
+                duration_ms=0.0,
+                created_at=created_at,
+            ),
+        )
+        self._session.flush()
+
+    def persist_pipeline_result(self, result: object, *, case: object, config: object) -> str:
+        from keiba_application.golden_race import (
+            GOLDEN_STAGE_ORDER,
+            GoldenRaceCase,
+            PipelineConfig,
+            PipelineResult,
+        )
+
+        if not isinstance(result, PipelineResult) or not isinstance(case, GoldenRaceCase):
+            raise TypeError("result and case must be Golden Race contracts")
+        if not isinstance(config, PipelineConfig):
+            raise TypeError("config must be a PipelineConfig")
+        if result.status != "succeeded" or result.decision is None:
+            raise ValueError("only a succeeded pipeline result can be persisted")
+
+        now = datetime.now(UTC)
+        if self._session.get(ModelVersion, config.model_version_id) is None:
+            self._session.add(
+                ModelVersion(
+                    version_id=config.model_version_id,
+                    model_name="golden-fixture",
+                    manifest={"run_id": config.run_id},
+                    created_at=now,
+                ),
+            )
+        if self._session.get(FeatureVersion, config.feature_version_id) is None:
+            self._session.add(
+                FeatureVersion(
+                    version_id=config.feature_version_id,
+                    feature_name="golden-fixture",
+                    manifest={"run_id": config.run_id},
+                    created_at=now,
+                ),
+            )
+        if self._session.get(LogicVersion, config.logic_version_id) is None:
+            self._session.add(
+                LogicVersion(
+                    version_id=config.logic_version_id,
+                    logic_id=config.logic_version_id.split("-v", maxsplit=1)[0],
+                    manifest={"run_id": config.run_id},
+                    created_at=now,
+                ),
+            )
+        if self._session.get(DataSnapshot, config.data_snapshot_id) is None:
+            self._session.add(
+                DataSnapshot(
+                    snapshot_id=config.data_snapshot_id,
+                    as_of_time=case.as_of_time.value,
+                    data_version="golden-fixture-v2",
+                    manifest={"run_id": config.run_id, "race_id": case.race_id},
+                    created_at=now,
+                ),
+            )
+        self._session.flush()
+
+        prediction_artifact = next(
+            artifact for artifact in result.artifacts if artifact.stage.value == "prediction"
+        )
+        prediction_id = f"prediction:{config.run_id}:{case.race_id}"
+        if self._session.get(PredictionSnapshot, prediction_id) is None:
+            self._session.add(
+                PredictionSnapshot(
+                    prediction_snapshot_id=prediction_id,
+                    race_id=case.race_id,
+                    as_of_time=case.as_of_time.value,
+                    data_snapshot_id=config.data_snapshot_id,
+                    feature_version_id=config.feature_version_id,
+                    model_version_id=config.model_version_id,
+                    logic_version_id=config.logic_version_id,
+                    predictions=prediction_artifact.output["win_probabilities"],
+                    created_at=now,
+                ),
+            )
+        self._session.flush()
+
+        for stage_artifact in result.artifacts:
+            self.add_stage_artifact(
+                stage_artifact,
+                stage_order=GOLDEN_STAGE_ORDER.index(stage_artifact.stage) + 1,
+            )
+
+        simulation_artifact = next(
+            artifact for artifact in result.artifacts if artifact.stage.value == "simulation"
+        )
+        simulation_id = f"simulation:{config.run_id}:{case.race_id}"
+        self._session.add(
+            Simulation(
+                simulation_id=simulation_id,
+                run_id=config.run_id,
+                race_id=case.race_id,
+                seed=config.seed,
+                logic_version_id=config.logic_version_id,
+                payload=simulation_artifact.output,
+                created_at=now,
+            ),
+        )
+        self._session.flush()
+        self._session.add(
+            SimulationResult(
+                simulation_result_id=f"simulation-result:{config.run_id}:{case.race_id}",
+                simulation_id=simulation_id,
+                payload=simulation_artifact.output,
+                created_at=now,
+            ),
+        )
+
+        odds_snapshot_id = f"odds:{config.run_id}:{case.race_id}"
+        self._session.add(
+            OddsSnapshot(
+                odds_snapshot_id=odds_snapshot_id,
+                race_id=case.race_id,
+                received_at=case.odds_received_at.value,
+                as_of_time=case.odds_snapshot_time.value,
+                coverage_status="complete",
+                odds=case.odds,
+                data_snapshot_id=config.data_snapshot_id,
+                logic_version_id=config.logic_version_id,
+                created_at=now,
+            ),
+        )
+        self._session.flush()
+
+        prediction_probabilities = prediction_artifact.output["win_probabilities"]
+        ev_artifact = next(
+            artifact for artifact in result.artifacts if artifact.stage.value == "ev"
+        )
+        ev_values = ev_artifact.output["win_ev"]
+        raw_win_odds = case.odds["win"]
+        if not isinstance(prediction_probabilities, dict) or not isinstance(ev_values, dict):
+            raise ValueError("prediction and EV artifacts must contain mappings")
+        if not isinstance(raw_win_odds, dict) or result.selected_runner_id is None:
+            raise ValueError("Golden Race result must have selected runner and odds")
+        candidate_id = f"candidate:{config.run_id}:{case.race_id}"
+        self._session.add(
+            BetCandidate(
+                candidate_id=candidate_id,
+                race_id=case.race_id,
+                prediction_snapshot_id=prediction_id,
+                odds_snapshot_id=odds_snapshot_id,
+                bet_type="WIN",
+                combination=result.selected_runner_id,
+                model_probability=float(prediction_probabilities[result.selected_runner_id]),
+                odds=float(raw_win_odds[result.selected_runner_id]),
+                expected_value=float(ev_values[result.selected_runner_id]),
+                uncertainty=0.0,
+                logic_version_id=config.logic_version_id,
+                payload={"source": "golden-race"},
+                created_at=now,
+            ),
+        )
+        self._session.flush()
+
+        recommendation_id = f"recommendation:{config.run_id}:{case.race_id}"
+        self._session.add(
+            Recommendation(
+                recommendation_id=recommendation_id,
+                race_id=case.race_id,
+                decision=result.decision.value,
+                strategy="golden",
+                data_snapshot_id=config.data_snapshot_id,
+                prediction_snapshot_id=prediction_id,
+                feature_version_id=config.feature_version_id,
+                model_version_id=config.model_version_id,
+                logic_version_id=config.logic_version_id,
+                payload={
+                    "reason": result.decision_reason,
+                    "selected_runner_id": result.selected_runner_id,
+                    "allocation_yen": result.allocation_yen,
+                },
+                persisted_at=now,
+            ),
+        )
+        self._session.flush()
+        if result.decision.value == "BUY":
+            self._session.add(
+                RecommendationItem(
+                    recommendation_item_id=f"recommendation-item:{config.run_id}:{case.race_id}",
+                    recommendation_id=recommendation_id,
+                    candidate_id=candidate_id,
+                    stake_yen=result.allocation_yen,
+                    payload={"bet_type": "WIN"},
+                    created_at=now,
+                ),
+            )
+        self._session.flush()
+        return recommendation_id
+
+    def add_evaluation(self, evaluation: Evaluation) -> None:
+        self._session.add(evaluation)
+        self._session.flush()
+
+    def update_stage_artifact(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("calculation_artifacts is append-only")
+
+    def delete_stage_artifact(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("calculation_artifacts is append-only")
 
 
 class BacktestPersistenceRepository:

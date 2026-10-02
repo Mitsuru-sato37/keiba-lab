@@ -67,6 +67,22 @@ The `0004_phase5_backtest_records` migration persists immutable
 `backtest_artifacts` records. A failed guard or stage stops later folds and
 leaves the run invalid with diagnostic lineage preserved.
 
+## Phase 6 Golden Race implementation contract
+
+The deterministic fixture path executes the gated sequence through the
+recommendation stage and persists one immutable `calculation_artifacts` record
+and one `logic_traces` record per stage. The `0005_phase6_golden_race`
+migration also persists simulations, simulation results, odds snapshots, bet
+candidates, recommendation items, and evaluations. The seeded simulation uses
+`SIM-001`; EV, candidate selection, allocation, and trace persistence use
+`EV-001`, `BET-001`, `MONEY-001`, and `TRACE-001` respectively.
+
+The fixture includes a BUY case and a market-value SKIP case. The ability
+predictor receives only as-of feature inputs; odds first enter at the market
+value stages. `ResultRepository.reveal` denies access until the matching
+recommendation is persisted. Policy replay reads the persisted prediction and
+does not retrain or replace it.
+
 Official prediction metrics are available only for a successful run. Betting
 metrics are separate and require sufficient point-in-time odds coverage; a
 coverage shortfall must be reported instead of being presented as official ROI.
