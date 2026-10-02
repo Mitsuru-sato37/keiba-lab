@@ -12,7 +12,7 @@ export function StageTimeline({
   onSelect,
 }: StageTimelineProps) {
   return (
-    <nav aria-label="Calculation stages" className="stage-timeline">
+    <nav aria-label="計算ステップ" className="stage-timeline">
       {stages.map((stage) => (
         <button
           aria-current={stage.stageId === selectedStageId ? "step" : undefined}

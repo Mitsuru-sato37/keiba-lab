@@ -80,17 +80,17 @@ const sharedLineage = (caseId: string, stageId: GoldenStageId): LineageSummary =
 });
 
 const stageLabels: Record<GoldenStageId, string> = {
-  data_snapshot: "Data snapshot",
-  feature_snapshot: "Feature snapshot",
-  ability_prediction: "Ability prediction",
-  calibration: "Calibration",
-  simulation: "Virtual race simulation",
-  bet_probability: "Bet probability",
-  odds_snapshot: "Odds snapshot",
-  expected_value: "Expected value",
-  strategy: "Strategy decision",
-  money_allocation: "Money allocation",
-  recommendation: "Recommendation",
+  data_snapshot: "データスナップショット",
+  feature_snapshot: "特徴量スナップショット",
+  ability_prediction: "能力予測",
+  calibration: "確率補正",
+  simulation: "仮想レースシミュレーション",
+  bet_probability: "馬券確率",
+  odds_snapshot: "オッズスナップショット",
+  expected_value: "期待値",
+  strategy: "買い方の判定",
+  money_allocation: "資金配分",
+  recommendation: "最終判定",
 };
 
 const marketStages = new Set<GoldenStageId>([
@@ -112,39 +112,39 @@ const createStages = (
       stageId,
       label: stageLabels[stageId],
       inputs: [
-        { label: "Race snapshot", value: `snapshot-${caseId}` },
-        { label: "Surface", value: surface },
+        { label: "レーススナップショット", value: `snapshot-${caseId}` },
+        { label: "馬場", value: surface === "turf" ? "芝" : "ダート" },
       ],
       conditions: [
-        "Only data received by the calculation as-of time is eligible",
+        "予想時点までに受け取ったデータだけを使用",
         isMarketStage
-          ? "Market evidence is evaluated after prediction persistence"
-          : "Current-race odds are excluded from ability evidence",
+          ? "市場情報は予想保存後に評価"
+          : "能力予測には当該レースのオッズを使用しない",
       ],
       outputs: [
-        { label: "Stage status", value: "succeeded" },
-        { label: "Result", value: null },
-        { label: "Payout", value: null },
+        { label: "ステップ状態", value: "成功" },
+        { label: "結果", value: null },
+        { label: "払戻", value: null },
       ],
       lineage: sharedLineage(caseId, stageId),
       validationReferences: ["LEAK-001", "VERSION-001"],
     };
 
     if (stageId === "ability_prediction") {
-      stage.inputs.push({ label: "Form score features", value: "3 runners" });
-      stage.outputs.push({ label: "Top runner", value: "horse-1 / horse-4" });
+      stage.inputs.push({ label: "走力スコアの特徴量", value: "3頭" });
+      stage.outputs.push({ label: "上位候補", value: "horse-1 / horse-4" });
     }
 
     if (stageId === "odds_snapshot") {
-      stage.inputs.push({ label: "Current-race odds", value: "2.8 / 4.0 / 8.0" });
-      stage.outputs.push({ label: "Odds received", value: "2022-01-01 09:30 UTC" });
+      stage.inputs.push({ label: "当該レースのオッズ", value: "2.8 / 4.0 / 8.0" });
+      stage.outputs.push({ label: "オッズ受信時刻", value: "2022-01-01 09:30 UTC" });
     }
 
     if (stageId === "recommendation") {
-      stage.outputs.push({ label: "Decision", value: decision });
+      stage.outputs.push({ label: "判定", value: decision === "BUY" ? "購入" : "見送り" });
       stage.outputs.push({
-        label: "Reason",
-        value: decision === "BUY" ? "Positive market value" : "SKIP_NO_VALUE",
+        label: "理由",
+        value: decision === "BUY" ? "市場価値あり" : "市場価値なし（SKIP_NO_VALUE）",
       });
     }
 
@@ -170,7 +170,7 @@ const makeCase = (
   decision,
   reasonCodes: decision === "SKIP" ? ["SKIP_NO_VALUE"] : [],
   confidence: decision === "BUY" ? 0.82 : 0.79,
-  dataStatus: "Complete through recommendation; result and payout gated",
+  dataStatus: "判定まで完了。結果と払戻は保存条件により管理",
   calculatedAt: "2022-01-01T09:35:00Z",
   strategies: [
     {
@@ -179,7 +179,7 @@ const makeCase = (
       candidateCount: decision === "BUY" ? 1 : 0,
       stake: decision === "BUY" ? 200 : 0,
       explanation:
-        decision === "BUY" ? "Positive value within the stable cap" : "No acceptable market value",
+        decision === "BUY" ? "安定型の投資上限内で市場価値あり" : "許容できる市場価値なし",
     },
     {
       name: "Balanced",
@@ -187,22 +187,22 @@ const makeCase = (
       candidateCount: decision === "BUY" ? 1 : 0,
       stake: decision === "BUY" ? 300 : 0,
       explanation:
-        decision === "BUY" ? "Value and confidence clear the balanced threshold" : "Value threshold not met",
+        decision === "BUY" ? "価値と信頼度がバランス型の基準を超過" : "価値の基準未達",
     },
     {
       name: "Longshot",
       decision: "SKIP",
       candidateCount: 0,
       stake: 0,
-      explanation: "No longshot candidate is eligible in this fixture",
+      explanation: "この検証データでは穴狙いの候補なし",
     },
   ],
   stages: createStages(caseId, surface, decision),
 });
 
 export const goldenRaceCases: readonly GoldenRaceCase[] = [
-  makeCase("golden-buy", "golden-race-buy", "Golden Race BUY", "turf", 1600, "BUY"),
-  makeCase("golden-skip", "golden-race-skip", "Golden Race SKIP", "dirt", 1400, "SKIP"),
+  makeCase("golden-buy", "golden-race-buy", "ゴールデンレース（購入）", "turf", 1600, "BUY"),
+  makeCase("golden-skip", "golden-race-skip", "ゴールデンレース（見送り）", "dirt", 1400, "SKIP"),
 ];
 
 export const getGoldenRaceCase = (caseId: GoldenRaceCase["caseId"]): GoldenRaceCase => {

@@ -5,7 +5,9 @@ Last updated: 2026-10-02
 
 ## Current phase
 
-Phase 7 — Logic Explorer mock (implementation in progress).
+Expansion Slice 1 — 2022 one-day validation (completed on this branch).
+
+Phase 7 — Logic Explorer mock (completed and merged in PR #6).
 
 Phase 5 — backtest engine and leak guard (completed).
 
@@ -24,10 +26,12 @@ Golden Race contracts, BUY/SKIP fixture cases, seeded gated pipeline,
 immutable calculation artifacts, `TRACE-001` traces, policy replay, and
 SQLite/PostgreSQL migration are implemented and verified.
 
-The Phase 7 slice has an approved design and implementation plan. The
-deterministic React mock now presents Today, Race, and Logic Explorer views
-against typed Golden Race evidence. Final styling verification and the Phase 7
-pull request remain.
+The Phase 7 slice presents Today, Race, and Logic Explorer views against typed
+Golden Race evidence and is merged in PR #6.
+
+The first expansion slice adds a deterministic one-day 2022 validation fixture
+and a replayable runner around the existing walk-forward orchestrator. It
+does not claim real-world 2022 performance or official ROI.
 
 ## Completed
 
@@ -79,11 +83,16 @@ pull request remain.
 - Betting-policy replay preserves the original prediction checksum and
   separates prediction metrics from odds-dependent betting metrics.
 - Phase 7 typed Golden Race fixture, Today/Race views, Logic Explorer evidence,
-  and deterministic navigation are implemented without an API dependency.
+  deterministic navigation, and a first-2022 validation race summary are
+  implemented without an API dependency. User-facing web labels are Japanese;
+  internal race IDs and decision codes remain stable.
+- Expansion Slice 1 deterministic 2022 one-day fixture, input provider,
+  replayable validation runner, and leak/gate/odds-coverage tests.
 
 ## Next implementation target
 
-Phase 7 — Logic Explorer mock final verification and pull request.
+Expansion Slice 2 — all eligible 2022 races after a BASE-JV historical input
+path is available.
 
 ## Constraints
 
@@ -96,7 +105,7 @@ Phase 7 — Logic Explorer mock final verification and pull request.
 
 ## Current handoff details
 
-- Branch: `codex/phase-7-logic-explorer`.
+- Branch: `codex/expansion-2022-validation`.
 - Phase 2 provider commits: `64ae7ca`, `fd3fa30`, and `797d59b`.
 - Phase 1 branch and commit: `codex/phase-1-data-foundation` at `d6d5d3a`.
 - No user input or external credential is currently required.
@@ -116,6 +125,7 @@ Phase 7 — Logic Explorer mock final verification and pull request.
 - Phase 6 targeted tests: contracts, pipeline, replay, persistence, result gate,
   and end-to-end flow pass.
 - Phase 7 web suite: 10 tests passed; typecheck and production build passed.
+- Expansion Slice 1 Python suite: 145 tests passed; Ruff and mypy passed.
 - PostgreSQL Docker runtime validation: Docker Desktop 4.93.0 with PostgreSQL
   16 Alpine is healthy, and Alembic is at
   `0005_phase6_golden_race (head)`.

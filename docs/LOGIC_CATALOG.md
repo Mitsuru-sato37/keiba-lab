@@ -37,6 +37,7 @@ a new version under the same ID unless the responsibility itself changes.
 | BACKTEST-001 | Walk-forward fold orchestration | Chronological order and expanding-window tests |
 | BACKTEST-002 | Immutable backtest run and artifact manifests | Migration and append-only persistence tests |
 | BACKTEST-003 | Recommendation-before-result capability gate | Partial-persistence denial test |
+| BACKTEST-004 | Deterministic one-day 2022 validation harness | Replay, temporal/leak, BUY/SKIP, and odds-coverage tests |
 
 ## Phase 4 implementation references
 
@@ -105,3 +106,18 @@ ports. `BACKTEST-002` is implemented by
 Validation evidence is in `tests/unit/test_backtest_engine.py`,
 `tests/unit/test_backtest_guards.py`, and
 `tests/integration/test_backtest_persistence.py`.
+
+## Expansion Slice 1 implementation references
+
+The deterministic one-day validation fixture and input boundary are
+implemented by
+`keiba_infrastructure.validation_fixture.OneDayValidationInputProvider`.
+The replayable runner is implemented by
+`keiba_infrastructure.validation_runner.run_one_day_validation`.
+
+Validation evidence is in
+`tests/unit/test_2022_validation_fixture.py`,
+`tests/integration/test_2022_one_day_validation.py`, and
+`tests/unit/test_2022_validation_documentation.py`.
+The fixture is synthetic and does not represent BASE-JV historical coverage;
+incomplete odds coverage withholds betting metrics.

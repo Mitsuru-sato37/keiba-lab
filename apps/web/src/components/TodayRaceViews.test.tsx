@@ -9,12 +9,12 @@ describe("Today and Race views", () => {
     const onSelectRace = vi.fn();
     render(<TodayView cases={goldenRaceCases} onSelectRace={onSelectRace} />);
 
-    expect(screen.getByRole("heading", { name: "Today" })).toBeVisible();
-    expect(screen.getByText("Golden Race BUY")).toBeVisible();
-    expect(screen.getByText("Golden Race SKIP")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "レース一覧" })).toBeVisible();
+    expect(screen.getByText("ゴールデンレース（購入）")).toBeVisible();
+    expect(screen.getByText("ゴールデンレース（見送り）")).toBeVisible();
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Open Golden Race SKIP" }),
+      screen.getByRole("button", { name: "詳細を見る：ゴールデンレース（見送り）" }),
     );
     expect(onSelectRace).toHaveBeenCalledWith("golden-skip");
   });
@@ -30,10 +30,10 @@ describe("Today and Race views", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Race" })).toBeVisible();
-    expect(screen.getAllByText("BUY").length).toBeGreaterThan(0);
-    expect(screen.getByText("Stable")).toBeVisible();
-    expect(screen.getByText(/Result and payout: unavailable/)).toBeVisible();
+    expect(screen.getByRole("heading", { name: "レース詳細" })).toBeVisible();
+    expect(screen.getAllByText("購入").length).toBeGreaterThan(0);
+    expect(screen.getByText("安定型")).toBeVisible();
+    expect(screen.getByText(/結果と払戻は表示されません/)).toBeVisible();
 
     rerender(
       <RaceView
@@ -43,13 +43,27 @@ describe("Today and Race views", () => {
       />,
     );
 
-    expect(screen.getAllByText("SKIP").length).toBeGreaterThan(0);
-    expect(screen.getByText("SKIP_NO_VALUE")).toBeVisible();
-    expect(screen.getByText("Stable")).toBeVisible();
+    expect(screen.getAllByText("見送り").length).toBeGreaterThan(0);
+    expect(screen.getByText(/SKIP_NO_VALUE/)).toBeVisible();
+    expect(screen.getByText("安定型")).toBeVisible();
 
-    fireEvent.click(screen.getByRole("button", { name: "Recommendation" }));
+    fireEvent.click(screen.getByRole("button", { name: "最終判定" }));
     expect(onExploreStage).toHaveBeenCalledWith("recommendation");
-    fireEvent.click(screen.getByRole("button", { name: "Back to Today" }));
+    fireEvent.click(screen.getByRole("button", { name: "レース一覧に戻る" }));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the first 2022 validation race with predictions and revealed result", () => {
+    const onSelectRace = vi.fn();
+    render(<TodayView cases={goldenRaceCases} onSelectRace={onSelectRace} />);
+
+    expect(screen.getByRole("heading", { name: "2022年最初の検証レース" })).toBeVisible();
+    expect(screen.getByText("validation-2022-0105-r01")).toBeVisible();
+    expect(screen.getByText("66.7%")).toBeVisible();
+    expect(screen.getByText("33.3%")).toBeVisible();
+    expect(screen.getAllByText("購入").length).toBeGreaterThan(0);
+    expect(screen.getByText("勝ち馬：validation-2022-0105-r01-h01")).toBeVisible();
+    expect(screen.getByText("280円")).toBeVisible();
+    expect(screen.getByText(/合成テストデータです/)).toBeVisible();
   });
 });

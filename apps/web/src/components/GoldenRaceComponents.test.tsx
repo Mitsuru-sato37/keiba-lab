@@ -17,14 +17,14 @@ describe("Golden Race shared components", () => {
       </>,
     );
 
-    expect(screen.getByText("BUY")).toBeVisible();
-    expect(screen.getByText("SKIP")).toBeVisible();
+    expect(screen.getByText("購入")).toBeVisible();
+    expect(screen.getByText("見送り")).toBeVisible();
   });
 
   it("renders missing evidence explicitly", () => {
-    render(<EvidenceRow label="Result" value={null} />);
+    render(<EvidenceRow label="結果" value={null} />);
 
-    expect(screen.getByText("Result")).toBeVisible();
+    expect(screen.getByText("結果")).toBeVisible();
     expect(screen.getByText("未提供")).toBeVisible();
   });
 
@@ -47,7 +47,7 @@ describe("Golden Race shared components", () => {
       "step",
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Recommendation" }));
+    fireEvent.click(screen.getByRole("button", { name: "最終判定" }));
     expect(onSelect).toHaveBeenCalledWith("recommendation");
   });
 });

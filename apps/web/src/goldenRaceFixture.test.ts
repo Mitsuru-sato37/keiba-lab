@@ -27,7 +27,7 @@ describe("Golden Race web fixture", () => {
       GOLDEN_STAGE_ORDER,
     );
     expect(getStageEvidence(race, "ability_prediction").label).toBe(
-      "Ability prediction",
+      "能力予測",
     );
     expect(getStageEvidence(race, "recommendation").lineage.logicVersion).toBe(
       "LOGIC-REC-001",
@@ -38,7 +38,7 @@ describe("Golden Race web fixture", () => {
     const race = getGoldenRaceCase("golden-skip");
     const earlyStage = getStageEvidence(race, "ability_prediction");
 
-    expect(earlyStage.inputs.find((input) => input.label === "Current-race odds")).toBeUndefined();
-    expect(earlyStage.outputs.find((output) => output.label === "Result")?.value).toBeNull();
+    expect(earlyStage.inputs.find((input) => input.label === "当該レースのオッズ")).toBeUndefined();
+    expect(earlyStage.outputs.find((output) => output.label === "結果")?.value).toBeNull();
   });
 });
