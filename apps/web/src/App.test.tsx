@@ -1,12 +1,28 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
 describe("App", () => {
-  it("shows the Phase 0 product status", () => {
+  it("navigates from Today to Race and Logic Explorer", () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "keiba-lab" })).toBeVisible();
-    expect(screen.getByText("Phase 0 project skeleton")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "Today" })).toBeVisible();
+    expect(
+      screen.getByRole("navigation", { name: "Product navigation" }),
+    ).toBeVisible();
+    expect(screen.getByText(/Synthetic fixture/)).toBeVisible();
+    expect(screen.getByRole("navigation")).toHaveClass("app-navigation");
+    expect(screen.getByRole("main")).toHaveClass("app-shell");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open Golden Race SKIP" }),
+    );
+    expect(screen.getByRole("heading", { name: "Race" })).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Recommendation" }));
+    expect(screen.getByRole("heading", { name: "Logic Explorer" })).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Back to Race" }));
+    expect(screen.getByRole("heading", { name: "Race" })).toBeVisible();
   });
 });
