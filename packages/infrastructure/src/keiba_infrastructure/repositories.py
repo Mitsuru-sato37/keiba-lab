@@ -9,7 +9,15 @@ from keiba_domain.time_values import UtcInstant
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
-from .schema import RawObservation, Recommendation, Result
+from .schema import (
+    BacktestArtifact,
+    BacktestFold,
+    BacktestGuardResult,
+    BacktestRun,
+    RawObservation,
+    Recommendation,
+    Result,
+)
 
 
 def _utc_datetime(value: datetime) -> datetime:
@@ -127,3 +135,48 @@ class ResultRepository:
             raise ValueError("result race_id must match recommendation race_id")
         self._session.add(result)
         self._session.flush()
+
+
+class BacktestPersistenceRepository:
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def add_run(self, run: BacktestRun) -> None:
+        self._session.add(run)
+        self._session.flush()
+
+    def add_fold(self, fold: BacktestFold) -> None:
+        self._session.add(fold)
+        self._session.flush()
+
+    def add_guard_result(self, result: BacktestGuardResult) -> None:
+        self._session.add(result)
+        self._session.flush()
+
+    def add_artifact(self, artifact: BacktestArtifact) -> None:
+        self._session.add(artifact)
+        self._session.flush()
+
+    def update_run(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_runs is append-only")
+
+    def delete_run(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_runs is append-only")
+
+    def update_fold(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_folds is append-only")
+
+    def delete_fold(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_folds is append-only")
+
+    def update_guard_result(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_guard_results is append-only")
+
+    def delete_guard_result(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_guard_results is append-only")
+
+    def update_artifact(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_artifacts is append-only")
+
+    def delete_artifact(self, *_: object, **__: object) -> None:
+        raise AppendOnlyViolationError("backtest_artifacts is append-only")

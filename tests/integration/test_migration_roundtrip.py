@@ -16,6 +16,10 @@ EXPECTED_TABLES = {
     "feature_versions",
     "logic_versions",
     "ingestion_batches",
+    "backtest_runs",
+    "backtest_folds",
+    "backtest_guard_results",
+    "backtest_artifacts",
 }
 REQUIRED_COLUMNS = {
     "feature_snapshots": {"data_snapshot_id", "feature_version_id", "logic_version_id"},
