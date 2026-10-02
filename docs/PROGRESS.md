@@ -89,6 +89,6 @@ Phase 6 — Golden Race gated pipeline.
 - Collector shell static contract tests and real .NET build: passed.
 - PostgreSQL Alembic migration: `0003_phase3_feature_logic_lineage` verified.
 - SQLite migration and append-only validation: `0004_phase5_backtest_records` verified.
-- PostgreSQL runtime validation was unavailable because the local shell does not
-  expose the `docker` command; the PostgreSQL migration branch was reviewed
-  statically.
+- PostgreSQL Docker runtime validation: Docker Desktop 4.93.0 with PostgreSQL
+  16 Alpine is healthy, and Alembic is at
+  `0004_phase5_backtest_records (head)`.
