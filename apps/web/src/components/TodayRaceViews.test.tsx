@@ -52,4 +52,18 @@ describe("Today and Race views", () => {
     fireEvent.click(screen.getByRole("button", { name: "Back to Today" }));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
+
+  it("shows the first 2022 validation race with predictions and revealed result", () => {
+    const onSelectRace = vi.fn();
+    render(<TodayView cases={goldenRaceCases} onSelectRace={onSelectRace} />);
+
+    expect(screen.getByRole("heading", { name: "First validation race" })).toBeVisible();
+    expect(screen.getByText("validation-2022-0105-r01")).toBeVisible();
+    expect(screen.getByText("66.7%")).toBeVisible();
+    expect(screen.getByText("33.3%")).toBeVisible();
+    expect(screen.getAllByText("BUY").length).toBeGreaterThan(0);
+    expect(screen.getByText("Winner: validation-2022-0105-r01-h01")).toBeVisible();
+    expect(screen.getByText("280 JPY")).toBeVisible();
+    expect(screen.getByText(/Synthetic fixture: not actual JRA data/)).toBeVisible();
+  });
 });

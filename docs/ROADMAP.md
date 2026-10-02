@@ -80,6 +80,8 @@ result access before persistence demonstrably fails.
 
 - Mock Today, Race, and Logic Explorer flows against Golden Race artifacts.
 - Click-through input, conditions, output, next stage, and versions.
+- Show the first 2022 validation race summary with runner probabilities and
+  recommendation/result evidence from deterministic fixture data.
 
 Exit: UI can trace a displayed recommendation to stored calculation evidence.
 

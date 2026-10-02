@@ -83,7 +83,8 @@ does not claim real-world 2022 performance or official ROI.
 - Betting-policy replay preserves the original prediction checksum and
   separates prediction metrics from odds-dependent betting metrics.
 - Phase 7 typed Golden Race fixture, Today/Race views, Logic Explorer evidence,
-  and deterministic navigation are implemented without an API dependency.
+  deterministic navigation, and a first-2022 validation race summary are
+  implemented without an API dependency.
 - Expansion Slice 1 deterministic 2022 one-day fixture, input provider,
   replayable validation runner, and leak/gate/odds-coverage tests.
 

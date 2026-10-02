@@ -23,7 +23,9 @@ Phase 7 succeeds when the mock UI can:
 5. display both `BUY` and `SKIP` as valid outcomes, including the structured
    `SKIP_NO_VALUE` reason;
 6. keep prediction evidence separate from odds-dependent market evidence; and
-7. pass deterministic component tests, a production build, and type checking.
+7. show the first 2022 one-day validation race with runner probabilities,
+   recommendation, and gated result summary; and
+8. pass deterministic component tests, a production build, and type checking.
 
 The mock does not claim live performance and does not purchase tickets.
 
@@ -67,11 +69,15 @@ Stage evidence
   -> return to Race or Today
 ```
 
-The Today view starts with the two deterministic fixture cases. Selecting a
-card opens the Race view. The Race view presents the top-level recommendation
-and a compact stage timeline. Selecting a timeline item opens the Logic
-Explorer detail for that stage. Back controls return to the previous product
-view without changing the fixture or inventing a new calculation.
+The Today view starts with a compact summary of the first 2022 one-day
+validation race and the two deterministic Golden Race fixture cases. The
+validation summary shows the runner probabilities, recommendation, and result
+only because the fixture report marks the recommendation as persisted. The
+Golden Race card flow is unchanged: selecting a card opens the Race view,
+which presents the top-level recommendation and a compact stage timeline.
+Selecting a timeline item opens the Logic Explorer detail for that stage. Back
+controls return to the previous product view without changing the fixture or
+inventing a new calculation.
 
 ## Data contract
 
@@ -110,6 +116,8 @@ Keep the web code in small components with explicit props:
 
 - `AppShell`: owns view and selected-case state and renders navigation;
 - `TodayView`: lists the two fixture cases and their top-level outcomes;
+- `ValidationRaceSummary`: shows the first 2022 validation race summary from
+  typed deterministic fixture data;
 - `RaceView`: shows recommendation summary, data status, strategies, and the
   ordered stage timeline;
 - `LogicExplorerView`: shows selected stage evidence and lineage;
@@ -131,6 +139,8 @@ read environment secrets, or perform a network request.
   replaced with a guessed explanation.
 - The result/recommendation gate is represented in the fixture evidence: the
   UI never shows result or payout data before the recommendation stage.
+- The validation summary may show result and payout only when its fixture
+  explicitly marks the recommendation as persisted.
 - `BUY` and `SKIP` use the same summary layout so `SKIP` is not treated as an
   error state.
 - The UI is informational only; no ticket purchase, account action, or
@@ -147,7 +157,9 @@ Tests must cover:
 5. pre-recommendation stages do not expose result or payout data;
 6. missing evidence renders an explicit unavailable state;
 7. stage navigation is deterministic and preserves the selected race; and
-8. the web test, typecheck, and production build pass.
+8. the first validation race renders runner probabilities, recommendation,
+   winner, and payout with the synthetic-fixture warning; and
+9. the web test, typecheck, and production build pass.
 
 The mock is not a performance report. Fixture results must not be described
 as actual 2022 race performance.

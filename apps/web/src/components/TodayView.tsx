@@ -1,5 +1,6 @@
 import type { GoldenRaceCase } from "../goldenRaceFixture";
 import { StatusBadge } from "./StatusBadge";
+import { ValidationRaceSummary } from "./ValidationRaceSummary";
 
 type TodayViewProps = {
   cases: readonly GoldenRaceCase[];
@@ -12,7 +13,7 @@ export function TodayView({ cases, onSelectRace }: TodayViewProps) {
       <p className="eyebrow">keiba-lab / Today</p>
       <h1 id="today-heading">Today</h1>
       <p>Deterministic Golden Race fixture cases for UI tracing.</p>
-      <p className="fixture-note">Synthetic fixture: not actual 2022 performance.</p>
+      <ValidationRaceSummary />
       <div className="race-card-grid">
         {cases.map((race) => (
           <article className="race-card" key={race.caseId}>

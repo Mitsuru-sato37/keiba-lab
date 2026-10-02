@@ -101,12 +101,56 @@ h2 {
 .race-card,
 .strategy-card,
 .evidence-card,
-.stage-evidence-card {
+.stage-evidence-card,
+.validation-race-summary {
   background: #ffffff;
   border: 1px solid #d8e1e6;
   border-radius: 1rem;
   box-shadow: 0 8px 24px rgba(23, 32, 42, 0.06);
   padding: 1.25rem;
+}
+
+.validation-race-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.validation-race-header {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.validation-runner-table-wrap {
+  overflow-x: auto;
+}
+
+.validation-runner-table {
+  border-collapse: collapse;
+  min-width: 620px;
+  width: 100%;
+}
+
+.validation-runner-table th,
+.validation-runner-table td {
+  border-bottom: 1px solid #e8eef1;
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+
+.validation-runner-table thead th {
+  color: #5a6b75;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.validation-runner-table caption {
+  font-size: 1.1rem;
+  font-weight: 750;
+  margin-bottom: 0.5rem;
+  text-align: left;
 }
 
 .race-card,
